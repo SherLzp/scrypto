@@ -1,13 +1,81 @@
 package schnorrNIZK
 
 import (
+	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"shercrypto/ecc/p256Utils"
+	sherMath "shercrypto/math"
+	sherUtils "shercrypto/utils"
 )
+
+const ONE = int64(1)
+
+type CurvePoint = ecdsa.PublicKey
+
+type schnorrNIZK struct {
+	curve elliptic.Curve
+}
+
+func NewSchnorrNIZK(curve elliptic.Curve) (nizk *schnorrNIZK) {
+	nizk = &schnorrNIZK{
+		curve: curve,
+	}
+	return nizk
+}
+
+func (this *schnorrNIZK) Prove(secret *big.Int) (X, V *CurvePoint, r *big.Int, err error) {
+	// g is the generator of G
+	g := p256Utils.ScalarBaseMult(new(big.Int).SetInt64(ONE))
+	gBytes := p256Utils.Marshal(g)
+	// p is the prime order of G
+	p := this.curve.Params().N
+	// v \in_R Z_p
+	v, err := rand.Int(rand.Reader, p)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	X = p256Utils.ScalarBaseMult(secret)
+	XBytes := p256Utils.Marshal(X)
+	V = p256Utils.ScalarBaseMult(v)
+	VBytes := p256Utils.Marshal(V)
+	g_X_VBytes := sherUtils.ContactBytes(gBytes, XBytes, VBytes)
+	// c = H(g || X || V)
+	c, err := sherUtils.Sha3Hash(g_X_VBytes)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	cInt := new(big.Int).SetBytes(c)
+	// r = v - cx
+	cx := sherMath.Mul(cInt, secret, p)
+	r = sherMath.Sub(v, cx, p)
+	return X, V, r, nil
+}
+
+func (this *schnorrNIZK) Verify(X, V *CurvePoint, r *big.Int) (res bool, err error) {
+	g := p256Utils.ScalarBaseMult(new(big.Int).SetInt64(ONE))
+	gBytes := p256Utils.Marshal(g)
+	XBytes := p256Utils.Marshal(X)
+	VBytes := p256Utils.Marshal(V)
+	g_X_VBytes := sherUtils.ContactBytes(gBytes, XBytes, VBytes)
+	// c = H(g || X || V)
+	c, err := sherUtils.Sha3Hash(g_X_VBytes)
+	cInt := new(big.Int).SetBytes(c)
+	if err != nil {
+		return false, err
+	}
+	// check if V == g^r X^c
+	cX := p256Utils.ScalarMult(X, cInt)
+	gr := p256Utils.ScalarBaseMult(r)
+	gr_cX := p256Utils.ScalarAdd(gr, cX)
+	gr_cX_Bytes := p256Utils.Marshal(gr_cX)
+	res = hex.EncodeToString(VBytes) == hex.EncodeToString(gr_cX_Bytes)
+	return res, nil
+}
 
 func TryOnce() {
 	fmt.Println("-----------Schnorr NIZK start-------------")
