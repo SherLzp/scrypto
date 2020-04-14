@@ -19,7 +19,7 @@ func TryOnce() {
 	gBytes := elliptic.Marshal(p256, g_x, g_y)
 	//g := Point{p256, g_x, g_y}
 	sha := sha256.New()
-	sha.Write(new(big.Int).SetBytes([]byte("Lin")).Bytes())
+	sha.Write([]byte("Lin"))
 	secret := sha.Sum(nil)
 	// get y
 	y_x, y_y := p256.ScalarBaseMult(secret)
