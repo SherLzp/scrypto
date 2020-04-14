@@ -47,11 +47,11 @@ The project is a crypto library written by [myself](https://www.sher.vip). This 
 - [ ] PRE based on pairing curves
 
 ### Signatures
-- [x] [Algebraic MAC](signatures\algebraicMAC)
-- [x] [An efficient self-blindable attribute-based credential scheme](signatures\ringers17) (Only demo part)
+- [x] [Algebraic MAC](signatures/algebraicMAC)
+- [x] [An efficient self-blindable attribute-based credential scheme](signatures/ringers17) (Only demo part)
 
 ### Zero-Knowledge
-- [x] [Schnorr NIZK](zeroKnowledge\schnorrNIZK)
+- [x] [Schnorr NIZK](zeroKnowledge/schnorrNIZK)
 - [ ] Groth16
 - [ ] SuperSonic
 - [ ] Plonk
