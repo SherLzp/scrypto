@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math/big"
 	"shercrypto/ecc/p256Utils"
 	sherMath "shercrypto/math"
@@ -92,4 +93,38 @@ func (this *macWBB) Verify(sk, mVec []*big.Int, sigma *CurvePoint) (res bool, er
 	vSigmaBytes := p256Utils.Marshal(vSigma)
 	res = hex.EncodeToString(gBytes) == hex.EncodeToString(vSigmaBytes)
 	return res, nil
+}
+
+func TryOnce() {
+	fmt.Println("-----------MacWBB start-------------")
+	p256 := elliptic.P256()
+	mac := NewMacWBB(p256)
+	sk, pk, err := mac.KeyGen(3)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("sk size:", len(sk))
+	fmt.Println("sk:", sk)
+	fmt.Println("pk size:", len(pk))
+	fmt.Println("pk:", pk)
+	mVec := make([]*big.Int, 3)
+	for i := 0; i < 3; i++ {
+		mVec[i] = new(big.Int).SetInt64(int64(i + 5))
+		fmt.Println("mVec(i+5) ", i, ":", int64(i+5))
+	}
+	fmt.Println("mVec size:", len(mVec))
+	sigmas, err := mac.Mac(sk, mVec)
+	if err != nil {
+		panic(err)
+	}
+	for i, sigma := range sigmas {
+		fmt.Println("sigma"+string(i)+":", p256Utils.Marshal(sigma))
+	}
+	fmt.Println("sigmas size:", len(sigmas))
+	res, err := mac.Verify(sk, mVec, sigmas[0])
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Verify result:", res)
+	fmt.Println("-----------MacWBB end-------------")
 }

@@ -3,7 +3,9 @@ package sherAes
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"encoding/hex"
 	"errors"
+	"fmt"
 )
 
 type aesGCM struct {
@@ -77,4 +79,28 @@ func (this *aesGCM) Decrypt(cipherText []byte, key []byte, iv []byte, additional
 		return nil, err
 	}
 	return plainText, nil
+}
+
+func TryOnce() {
+	fmt.Println("-----------AES GCM start-------------")
+	// create aes gcm cipher
+	aesGCMCipher := NewDefaultAesGCM()
+	// message you want to encrypt
+	plainText := []byte("Hello World")
+	fmt.Println("PlainText:", string(plainText))
+	// key size should larger than 32 bytes
+	key := []byte("key:12345678912345678912345678912345789")
+	// nonce
+	iv := []byte("iv:123456789123")
+	cipherText, err := aesGCMCipher.Encrypt(plainText, key, iv, nil)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("CipherText:", hex.EncodeToString(cipherText))
+	decryptText, err := aesGCMCipher.Decrypt(cipherText, key, iv, nil)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Text after decryption:", string(decryptText))
+	fmt.Println("-----------AES GCM end-------------")
 }
