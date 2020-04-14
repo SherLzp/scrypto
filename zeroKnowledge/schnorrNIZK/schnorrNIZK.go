@@ -28,7 +28,7 @@ func NewSchnorrNIZK(curve elliptic.Curve) (nizk *schnorrNIZK) {
 	return nizk
 }
 
-func (this *schnorrNIZK) Prove(secret *big.Int) (X, V *CurvePoint, r *big.Int, err error) {
+func (this *schnorrNIZK) Prove(secret *big.Int, A *CurvePoint) (X, V *CurvePoint, r *big.Int, err error) {
 	// g is the generator of G
 	g := p256Utils.ScalarBaseMult(new(big.Int).SetInt64(ONE))
 	gBytes := p256Utils.Marshal(g)
@@ -43,9 +43,11 @@ func (this *schnorrNIZK) Prove(secret *big.Int) (X, V *CurvePoint, r *big.Int, e
 	XBytes := p256Utils.Marshal(X)
 	V = p256Utils.ScalarBaseMult(v)
 	VBytes := p256Utils.Marshal(V)
-	g_X_VBytes := sherUtils.ContactBytes(gBytes, XBytes, VBytes)
-	// c = H(g || X || V)
-	c, err := sherUtils.Sha3Hash(g_X_VBytes)
+	// A is Prover public key
+	ABytes := p256Utils.Marshal(A)
+	g_X_V_A_Bytes := sherUtils.ContactBytes(gBytes, XBytes, VBytes, ABytes)
+	// c = H(g || X || V || A )
+	c, err := sherUtils.Sha3Hash(g_X_V_A_Bytes)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -56,14 +58,15 @@ func (this *schnorrNIZK) Prove(secret *big.Int) (X, V *CurvePoint, r *big.Int, e
 	return X, V, r, nil
 }
 
-func (this *schnorrNIZK) Verify(X, V *CurvePoint, r *big.Int) (res bool, err error) {
+func (this *schnorrNIZK) Verify(A, X, V *CurvePoint, r *big.Int) (res bool, err error) {
 	g := p256Utils.ScalarBaseMult(new(big.Int).SetInt64(ONE))
 	gBytes := p256Utils.Marshal(g)
 	XBytes := p256Utils.Marshal(X)
 	VBytes := p256Utils.Marshal(V)
-	g_X_VBytes := sherUtils.ContactBytes(gBytes, XBytes, VBytes)
-	// c = H(g || X || V)
-	c, err := sherUtils.Sha3Hash(g_X_VBytes)
+	ABytes := p256Utils.Marshal(A)
+	g_X_V_Bytes := sherUtils.ContactBytes(gBytes, XBytes, VBytes, ABytes)
+	// c = H(g || X || V || A)
+	c, err := sherUtils.Sha3Hash(g_X_V_Bytes)
 	cInt := new(big.Int).SetBytes(c)
 	if err != nil {
 		return false, err
