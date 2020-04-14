@@ -24,16 +24,16 @@ func NewDefaultAesGCM() (aesGCMCipher *aesGCM) {
 // @iv: nonce which is used in encryption
 // @additionalData: data which is used to mask plainText
 func (this *aesGCM) Encrypt(plainText []byte, key []byte, iv []byte, additionalData []byte) (cipherText []byte, err error) {
-	// key size should be 32 bytes
-	if len(key) != this.gcmKeySize {
-		return nil, errors.New("key size not match: key should be 32 bytes")
+	// key size should larger than 32 bytes
+	if len(key) < this.gcmKeySize {
+		return nil, errors.New("key size not match: key should larger than 32 bytes")
 	}
-	// iv size should be 12 bytes
-	if len(iv) != this.gcmKeySize {
-		return nil, errors.New("iv size not match: iv should be 12 bytes")
+	// iv size should larger than 12 bytes
+	if len(iv) < this.gcmStandardNonceSize {
+		return nil, errors.New("iv size not match: iv should larger than 12 bytes")
 	}
 	// create block cipher
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(key[:32])
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (this *aesGCM) Encrypt(plainText []byte, key []byte, iv []byte, additionalD
 		return nil, err
 	}
 	// encrypt plainText
-	cipherText = aesGCM.Seal(nil, iv, plainText, additionalData)
+	cipherText = aesGCM.Seal(nil, iv[:12], plainText, additionalData)
 	return cipherText, nil
 }
 
@@ -53,16 +53,16 @@ func (this *aesGCM) Encrypt(plainText []byte, key []byte, iv []byte, additionalD
 // @iv: nonce which is used in encryption
 // @additionalData: data which was used to mask plainText
 func (this *aesGCM) Decrypt(cipherText []byte, key []byte, iv []byte, additionalData []byte) (plainText []byte, err error) {
-	// key size should be 32 bytes
-	if len(key) != this.gcmKeySize {
-		return nil, errors.New("key size not match: key should be 32 bytes")
+	// key size should larger than 32 bytes
+	if len(key) < this.gcmKeySize {
+		return nil, errors.New("key size not match: key should larger than 32 bytes")
 	}
-	// iv size should be 12 bytes
-	if len(iv) != this.gcmStandardNonceSize {
-		return nil, errors.New("iv size not match: iv should be 12 bytes")
+	// iv size should larger than 12 bytes
+	if len(iv) < this.gcmStandardNonceSize {
+		return nil, errors.New("iv size not match: iv should larger than 12 bytes")
 	}
 	// create block cipher
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(key[:32])
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (this *aesGCM) Decrypt(cipherText []byte, key []byte, iv []byte, additional
 		return nil, err
 	}
 	// decrypt the cipherText
-	plainText, err = aesGCM.Open(nil, iv, cipherText, additionalData)
+	plainText, err = aesGCM.Open(nil, iv[:12], cipherText, additionalData)
 	if err != nil {
 		return nil, err
 	}
