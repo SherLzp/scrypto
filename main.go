@@ -1,6 +1,7 @@
 package main
 
 import (
+	"shercrypto/encryptions/recrypt"
 	"shercrypto/encryptions/sherAes"
 	"shercrypto/signatures/algebraicMAC"
 	"shercrypto/signatures/ringers17"
@@ -12,4 +13,5 @@ func main() {
 	ringers17.TryOnce()
 	schnorrNIZK.TryOnce()
 	algebraicMAC.TryOnce()
+	recrypt.TryOnce()
 }

@@ -3,6 +3,7 @@ package p256Utils
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"encoding/hex"
 	"math/big"
 )
 
@@ -55,4 +56,53 @@ func Unmarshal(aBytes []byte) (point *CurvePoint) {
 		Y:     y,
 	}
 	return point
+}
+
+func IsEqual(a, b *CurvePoint) (res bool) {
+	return hex.EncodeToString(Marshal(a)) == hex.EncodeToString(Marshal(b))
+}
+
+// convert private key to string
+func PrivateKeyToString(privateKey *ecdsa.PrivateKey) string {
+	return hex.EncodeToString(privateKey.D.Bytes())
+}
+
+// convert string to private key
+func PrivateKeyStrToKey(privateKeyStr string) (*ecdsa.PrivateKey, error) {
+	priKeyAsBytes, err := hex.DecodeString(privateKeyStr)
+	if err != nil {
+		return nil, err
+	}
+	d := new(big.Int).SetBytes(priKeyAsBytes)
+	// compute public key
+	pubKey := ScalarBaseMult(d)
+	key := &ecdsa.PrivateKey{
+		D:         d,
+		PublicKey: *pubKey,
+	}
+	return key, nil
+}
+
+// convert public key to string
+func PublicKeyToString(publicKey *ecdsa.PublicKey) (pubKeyStr string) {
+	pubKeyBytes := Marshal(publicKey)
+	pubKeyStr = hex.EncodeToString(pubKeyBytes)
+	return pubKeyStr
+}
+
+// convert public key string to key
+func PublicKeyStrToKey(pubKeyStr string) (pubKey *ecdsa.PublicKey, err error) {
+	pubKeyAsBytes, err := hex.DecodeString(pubKeyStr)
+	if err != nil {
+		return nil, err
+	}
+	key := Unmarshal(pubKeyAsBytes)
+	return key, nil
+}
+
+// map hash value to curve
+func HashToCurve(hash []byte) (*big.Int) {
+	hashInt := new(big.Int).SetBytes(hash)
+	N := p256.Params().N
+	return hashInt.Mod(hashInt, N)
 }
