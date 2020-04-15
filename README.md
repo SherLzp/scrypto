@@ -8,18 +8,10 @@ The project is a crypto library written by [myself](https://www.sher.vip). This 
 ├─ecc # elliptic curve utils
 │  └─p256Utils # P256 curve utils
 ├─encryptions # Encryption algorithms
-│  └─sherAes # AES algorithm
-│      └─assets
 ├─math # wrapped math algorithms
 ├─signatures # Signature algorithms
-│  ├─algebraicMAC
-│  │  └─assets
-│  └─ringers17
-│      └─assets
 ├─utils # utils used in our project
-└─zeroKnowledge # zero-knowledge algorithms
-    └─schnorrNIZK
-        └─assets
+└─proof # zero-knowledge algorithms
 ```
 
 # Curves
@@ -43,7 +35,7 @@ The project is a crypto library written by [myself](https://www.sher.vip). This 
 
 ### Proxy Re-Encryption
 
-- [x] [Proxy Re-Encryption](https://github.com/SherLzp/goRecrypt) (which will be moved to here later)
+- [x] [Proxy Re-Encryption](encryptions/recrypt) 
 - [ ] PRE based on pairing curves
 
 ### Signatures
@@ -69,10 +61,11 @@ waiting...
 package main
 
 import (
+	"shercrypto/encryptions/recrypt"
 	"shercrypto/encryptions/sherAes"
+	"shercrypto/proof/schnorrNIZK"
 	"shercrypto/signatures/algebraicMAC"
 	"shercrypto/signatures/ringers17"
-	"shercrypto/zeroKnowledge/schnorrNIZK"
 )
 
 func main() {
@@ -80,6 +73,7 @@ func main() {
 	ringers17.TryOnce()
 	schnorrNIZK.TryOnce()
 	algebraicMAC.TryOnce()
+	recrypt.TryOnce()
 }
 ```
 
@@ -145,5 +139,23 @@ sigmas size: 4
 Verify result: true
 -----------MacWBB end-------------
 ```
+
+### Recrypt
+
+```go
+-----------Umbral Recrypt start-------------
+origin message: Hello, Proxy Re-Encryption
+Origin key: 98c56bec1c0b0c5c7bd224f62d8771e760f9bfcad93a844f01aca37a2fada9cc
+capsule before encode: &{0xc000068990 0xc000068b10 1623897108617114080048404228102022552779082005827903778035348507532040457526}
+capsule after decode: {0xc000476d20 0xc0004770a0 1623897108617114080048404228102022552779082005827903778035348507532040457526}
+ciphereText: 47524b4a14c67420ea7047524c51c9328cba236a57ce6fdc06f470f56d107410b61bd69599635c9be6e3
+recreate key: 98c56bec1c0b0c5c7bd224f62d8771e760f9bfcad93a844f01aca37a2fada9cc
+rk: 29345157542874562300339661609045096390653661172012520974048973944286637746589
+PlainText by my own private key: Hello, Proxy Re-Encryption
+plainText: Hello, Proxy Re-Encryption
+-----------Umbral Recrypt end-------------
+```
+
+
 
 Thanks!

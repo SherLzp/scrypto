@@ -3,9 +3,9 @@ package main
 import (
 	"shercrypto/encryptions/recrypt"
 	"shercrypto/encryptions/sherAes"
+	"shercrypto/proof/schnorrNIZK"
 	"shercrypto/signatures/algebraicMAC"
 	"shercrypto/signatures/ringers17"
-	"shercrypto/zeroKnowledge/schnorrNIZK"
 )
 
 func main() {
