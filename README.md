@@ -42,8 +42,8 @@ The project is a crypto library written by [myself](https://www.sher.vip). This 
 - [x] [Algebraic MAC](signatures/algebraicMAC)
 - [x] [An efficient self-blindable attribute-based credential scheme](signatures/ringers17) (Only demo part)
 
-### Zero-Knowledge
-- [x] [Schnorr NIZK](zeroKnowledge/schnorrNIZK)
+### Proof
+- [x] [Schnorr NIZK](proof/schnorrNIZK)
 - [ ] Groth16
 - [ ] SuperSonic
 - [ ] Plonk
