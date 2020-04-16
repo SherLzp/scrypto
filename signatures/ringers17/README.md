@@ -2,64 +2,90 @@
 
 ## Img
 
-![sbABC1](assets/sbABC1.png)
-
-![sbABC2](assets/sbABC2.png)
+![sig_ABC_1](assets/sig_ABC_1.png)
 
 ## Origin
 
-$Setup$：
+### Signature Scheme
 
-$e:G_1 \times G_2 \rightarrow{} G_T$，prime order: $p$，for all $P \in G_1, Q \in G_2$, $e(P^a,Q) = e(P,Q^a) = e(P,Q)^a$
+$KeyGen(1^{l },n)$：
 
-Issuer Private keys：
+发布者生成一个第三类型的配对曲线：$e : G_1 \times G_2 \rightarrow{} G_T$，满足$|p| = l$，其中$p$是曲线的阶。然后取值$Q \in_R G_2$，以及整数$a,a_0,...,a_n,z \in_R \mathbb{Z}_p^*$，然后令$A=Q^a,A_0 = Q^{a_0},A_n = Q^{a_n},Z=Q^z$。公钥是$\sigma=(p,e,Q,A,A_0,...,A_n,Z)$，私钥是$(a,a_0,...,a_n,z)$
 
-$a,a_1,..,a_n,z \in_{R} \mathbb{Z}_p := \mathbb{Z}/p\mathbb{Z}$
+$Sign(k_0,...,k_n)$：
 
-Issuer Public Keys：
+发布者选择$\kappa \in_R \mathbb{Z}_p^*,K \in_R G_1$，令$S = K^a,S_0 = K^{a_0},...,S_n = K^{a_n},T=(K S^{\kappa} \prod_{i=0}^n S_i^{k_i})^z$，签名是：$(\kappa,K,S,S_0,...,S_n,T)$
 
-$Q,A = Q^a,A_i = Q^{a_i},Z = Q^z \in G_2$
+$Verify((k_0,...,k_n),(\kappa,K,S,S_0,...,S_n,T),\sigma)$：
 
-Attributes: $(k_1,...,k_n)$，Signatures: $(\kappa,K,S,S_1,...,S_n,T)$：
+令$C = K S^{\kappa} \prod_{i=0}^n S_i^{k_i}$，验证$K,C \neq 1$，生成随机数$r,r_0,...,r_n \in_R \mathbb{Z}_p^*$，然后验证：
 $$
-\kappa \in_R \mathbb{Z}_p , K \in_R G_1 \\
-S = K^a, S_i = K^{a_i} \in G_1 \\
-T = C^{z} \in G_1,where \ C=KS^{\kappa}S_1^{k_1} \dots S_n^{k_n}
-$$
-Verify：
-$$
-e(K^a,Q) = e(S,Q) \overset{?}{=} e(K,A) = e(K,Q^a) \\
-e(S_i,Q) \overset{?}{=} e(K,A_i) \\
-e(T,Q) \overset{?}{=} e(KS^{\kappa} S_1^{k_1} \dots S_n^{k_n},Z)
+e(S^r \prod_{i=0}^n S_i^{r_i},Q) \overset{?}{=} e(K,A^r \prod_{i=0}^n A_i^{r_i})  \\
+e(T,Q) \overset{?}{=} e(C,Z)
 $$
 
-Credentials(We assume that it has $3$ attributes)：
 
-$(k_1,k_2,k_3),(\kappa,K,S,S_1,S_2,S_3,T)$，其中$S = K^a,S_i = K^{a_i}, C = KS^{\kappa}S_1^{k_1} S_2^{k_2} S_3^{k_3},T=C^z$
+其中$k_n \in \mathbb{Z}_p$是属性。
 
-Start making attributes keep privacy：
+### Credential Scheme
+
+$Issue$：
+
+Common inofrmation between User and Issuer:
+
+Attributes：$k_1,...,k_n$，issuer's public key：$\sigma = (p,e,Q,A,A_0,...,A_n,Z)$
+
+Issuer:
+
+public $\bar{S} = \bar{K}^a,\bar{S_0} = \bar{K}^{a_0}$ where $\bar{K} \in_R G_1$
+
+User:
 $$
-Choose \ \alpha,\beta \in_R \mathbb{Z}_p^* \\
-\overline{K} = K^{\alpha}, \overline{S} = S^{\alpha},\overline{S_i} = S_i^{\alpha} \\
-\widetilde{C} = (C^{\alpha})^{\beta}, \widetilde{T} = (T^{\alpha})^{\beta}
+choose \ \alpha,\kappa' \in_R \mathbb{Z}_p^* \\
+set \ S = \bar{S}^{\alpha},S_0 = \bar{S_0}^{\alpha} \\
+SPK\{(\kappa',k_0): R=S^{\kappa'} S_0^{k_0} \} \\
+sends \ S,S_0,R=S^{\kappa'} S_0^{k_0} \text{ to issuer}
 $$
-Show credential, disclosing $k_2,k_3$：
+Issuer:
 $$
-Send \ (\overline{K},\overline{S},\overline{S_1},\overline{S_2},\overline{S_3}),(\widetilde{C},\widetilde{T}) \\
-Both sides make \ D = \overline{K} \overline{S_2}^{k_2} \overline{S_3}^{k_3} \\
-Calculate \ SPK\{(\beta,\kappa,k_1): \widetilde{C}^{1/\beta} = D \overline{S}^{\kappa} \overline{S_1}^{k_1} = \overline{K} \overline{S}^{\kappa} \overline{S_1}^{k_1} \overline{S_2}^{k_2} \overline{S_3}^{k_3} \}
+set \ K = S^{1/a} \\
+verify \ S \neq \bar{S},K = S_0^{1/a_0} \\
+choose \ \kappa'' \in_R \mathbb{Z}_p \\
+set \ S_i = K^{a_i},\forall i \in[1,n] \\
+set \ T = (K S^{\kappa''} R \prod_{i=1}^n S_i^{k_i})^z \\
+sends \ \kappa'',K,S_1,...,S_n,T \text{ to user}
 $$
-$Verify$：
+User:
 $$
-First \ verify ：e(\overline{S},Q) \overset{?}{=} e(\overline{K},A) \\
- \Rightarrow{} e(\overline{K}^a,Q) = e(\overline{K},Q^a) = e(\overline{K},A) \\
- Then \ verify：e(\overline{S_i},Q) \overset{?}{=} e(K,A_i) \\
- \Rightarrow{} e(\overline{K}^{a_i},Q) = e(\overline{K},Q^{a_i}) = e(\overline{K},A_i) \\
- Finally \ verify：e(\widetilde{T},Q) \overset{?}{=} e(\widetilde{C},Z) \\
- \Rightarrow{} e(\widetilde{C}^z,Q) = e(\widetilde{C},Q^z) = e(\widetilde{C},Z)
+set \ \kappa = \kappa' + \kappa'' \\
+return \ (k_0,...,k_n),(\kappa,K,S,S_0,...,S_n,T)
 $$
-Based on LRSW Assumption，the credential is tamper-proof
+$ShowCredential$:
+
+Common inofrmation between User and Verifier:
+
+Issuer's public key $\sigma = (p,e,Q,A,A_0,...,A_n,Z)$, disclosure set $\mathcal{D}$, undisclosed set $\mathcal{C} = \{1,...,n \} \setminus \mathcal{D}$, disclosed attributes: $(k_i)_{i \in D}$
+
+User:
+$$
+knows \ K,S,S_0,...,S_n,\kappa,(k_i)_{i \in \mathcal{C}},C,T \\
+choose \ \alpha,\beta \in_R \mathbb{Z}_p^* \\
+set \ \tilde{C} = C^{- \alpha/\beta}, \tilde{T} = T^{- \alpha/\beta} \\
+set \ D = \bar{K}^{-1} \prod_{i \in D} \bar{S_i}^{-k_i} \\
+SPK\{(\beta,\kappa,k_0,k_i)_{i \in \mathcal{C}}: D = \tilde{C}^{\beta} \bar{S}^{\kappa} \bar{S_0}^{k_0} \prod_{i \in \mathcal{C}} \bar{S_i}^{k_i} \} \\
+sends \ \bar{K},\bar{S},(\bar{S_i})_{i=0,...,n},\tilde{C},\tilde{T} \text{ to Verifier}
+$$
+$Verify$:
+
+Verifier:
+$$
+Verify \ ZK \ Proof \\
+choose \ r,r_0,...,r_n \in_R \mathbb{Z}_p^* \\
+verify \ e(\tilde{C},Z) \overset{?}{=} e(\tilde{T},Q) \\
+and \ e(\bar{S}^r \prod_{i=0}^n \bar{S_i}^{r_i},Q) \overset{?}{=} e(\bar{K},A^r \prod_{i=0}^n A_i^{r_i})
+$$
 
 # References
 
 Ringers S, Verheul E, Hoepman J H. An efficient self-blindable attribute-based credential scheme[C]//International Conference on Financial Cryptography and Data Security. Springer, Cham, 2017: 3-20.
+
