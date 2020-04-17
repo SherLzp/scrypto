@@ -154,6 +154,7 @@ func (this *ringersCredential) Verify(credential *SelectiveCredential, optionDat
 }
 
 func TryOnce() {
+	fmt.Println("-----------Anonymous Credential start-------------")
 	ringersSigner := ringers17.NewSigOfRingers()
 	sk, pk, err := ringersSigner.KeyGen(2)
 	if err != nil {
@@ -194,4 +195,5 @@ func TryOnce() {
 		panic(err)
 	}
 	fmt.Println("Verify selective credential result:", res)
+	fmt.Println("-----------Anonymous Credential end-------------")
 }
