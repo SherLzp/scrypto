@@ -44,6 +44,7 @@ The project is a crypto library written by [myself](https://www.sher.vip). This 
 
 ### Proof
 - [x] [Schnorr NIZK](proof/schnorrNIZK)
+- [x] [An efficient self-blindable attribute-based credential scheme](proof/credentials)
 - [ ] Groth16
 - [ ] SuperSonic
 - [ ] Plonk
