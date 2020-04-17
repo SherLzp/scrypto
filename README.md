@@ -40,7 +40,7 @@ The project is a crypto library written by [myself](https://www.sher.vip). This 
 
 ### Signatures
 - [x] [Algebraic MAC](signatures/algebraicMAC)
-- [x] [An efficient self-blindable attribute-based credential scheme](signatures/ringers17) (Only demo part)
+- [x] [Ringers17 Signature Scheme](signatures/ringers17)
 
 ### Proof
 - [x] [Schnorr NIZK](proof/schnorrNIZK)

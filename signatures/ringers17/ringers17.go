@@ -11,7 +11,7 @@ import (
 	sherMath "shercrypto/math"
 )
 
-type SigOfRingers struct {
+type sigOfRingers struct {
 	P *big.Int
 }
 
@@ -33,14 +33,14 @@ type Sigma struct {
 	T     *bn256.G1
 }
 
-func NewSigOfRingers() (ringersSigner *SigOfRingers) {
-	ringersSigner = &SigOfRingers{
+func NewSigOfRingers() (ringersSigner *sigOfRingers) {
+	ringersSigner = &sigOfRingers{
 		P: bn256.Order,
 	}
 	return ringersSigner
 }
 
-func (this *SigOfRingers) KeyGen(n int) (sk []*big.Int, pk *RingersPK, err error) {
+func (this *sigOfRingers) KeyGen(n int) (sk []*big.Int, pk *RingersPK, err error) {
 	// new RingersPK
 	pk = new(RingersPK)
 	// Q \in_R G_2
@@ -82,7 +82,7 @@ func (this *SigOfRingers) KeyGen(n int) (sk []*big.Int, pk *RingersPK, err error
 	return sk, pk, nil
 }
 
-func (this *SigOfRingers) Sign(ks []*big.Int, sk []*big.Int) (sigma *Sigma, err error) {
+func (this *sigOfRingers) Sign(ks []*big.Int, sk []*big.Int) (sigma *Sigma, err error) {
 	// k_0,...,k_t
 	// t should less or equal than len(sk) - 2
 	skSize := len(sk)
@@ -127,7 +127,7 @@ func (this *SigOfRingers) Sign(ks []*big.Int, sk []*big.Int) (sigma *Sigma, err 
 	return sigma, nil
 }
 
-func (this *SigOfRingers) Verify(ks []*big.Int, sigma *Sigma, pk *RingersPK) (res bool, err error) {
+func (this *sigOfRingers) Verify(ks []*big.Int, sigma *Sigma, pk *RingersPK) (res bool, err error) {
 	// check K \neq 1
 	one := bn256Utils.G1ScalarBaseMult(sherMath.Sub(this.P, new(big.Int).SetInt64(1), this.P))
 	if sigma.K.String() == one.String() {
@@ -154,7 +154,7 @@ func (this *SigOfRingers) Verify(ks []*big.Int, sigma *Sigma, pk *RingersPK) (re
 	Sr_Si_ri_prod := bn256Utils.G1ScalarMult(sigma.S, r)
 	// A^r \prod_{i=0}^n A_i^{r_i}
 	Ar_Ai_ri_prod := bn256Utils.G2ScalarMult(pk.A, r)
-	for i := 0; i < sigma.N; i++ {
+	for i := 0; i < len(ks); i++ {
 		ri, _ := rand.Int(rand.Reader, this.P)
 		Si_ri := bn256Utils.G1ScalarMult(sigma.Ss[i], ri)
 		Ai_ri := bn256Utils.G2ScalarMult(pk.As[i], ri)
@@ -167,11 +167,44 @@ func (this *SigOfRingers) Verify(ks []*big.Int, sigma *Sigma, pk *RingersPK) (re
 		return false, nil
 	}
 	eTQ := bn256.Pair(sigma.T, pk.Q)
-	eCZ := bn256.Pair(C, pk.Z)
+	eCZ := bn256.Pair(sigma.C, pk.Z)
 	if eTQ.String() != eCZ.String() {
 		return false, nil
 	}
 	return true, nil
+}
+
+func (this *sigOfRingers) ReRandomizeSignature(sigma *Sigma) (beta *big.Int, newSigma *Sigma, err error) {
+	newSigma = new(Sigma)
+	// \alpha, \beta \in_R Z_p
+	alpha, err := rand.Int(rand.Reader, this.P)
+	beta, err = rand.Int(rand.Reader, this.P)
+	if err != nil {
+		return nil, nil, err
+	}
+	// \bar{K} = K^{\alpha},\bar{S} = S^{\alpha}, \bar{S_i} = S_i^{\alpha}
+	K_bar := bn256Utils.G1ScalarMult(sigma.K, alpha)
+	S_bar := bn256Utils.G1ScalarMult(sigma.S, alpha)
+	newSigma.K = K_bar
+	newSigma.S = S_bar
+	for i := 0; i < sigma.N; i++ {
+		Si_bar := bn256Utils.G1ScalarMult(sigma.Ss[i], alpha)
+		newSigma.Ss = append(newSigma.Ss, Si_bar)
+	}
+	// - \alpha / \beta
+	//beta_inverse := sherMath.ModInverse(beta, this.P)
+	//alpha_beta_inverse := sherMath.Mul(alpha, beta_inverse, this.P)
+	//neg_alpha_beta_inverse := sherMath.Neg(alpha_beta_inverse)
+	alpha_beta := sherMath.Mul(alpha, beta, this.P)
+	// \tilde{C} = C^{ \alpha * \beta}
+	C_tilde := bn256Utils.G1ScalarMult(sigma.C, alpha_beta)
+	// \tilde{T} = T^{\alpha * \beta}
+	T_tilde := bn256Utils.G1ScalarMult(sigma.T, alpha_beta)
+	newSigma.C = C_tilde
+	newSigma.T = T_tilde
+	newSigma.N = len(newSigma.Ss)
+	newSigma.Kappa = sigma.Kappa
+	return beta, newSigma, nil
 }
 
 func TryOnce() {

@@ -17,6 +17,10 @@ func G1Add(a, b *bn256.G1) *bn256.G1 {
 	return new(bn256.G1).Add(a, b)
 }
 
+func G1Neg(a *bn256.G1) *bn256.G1 {
+	return new(bn256.G1).Neg(a)
+}
+
 func G2ScalarBaseMult(a *big.Int) *bn256.G2 {
 	return new(bn256.G2).ScalarBaseMult(a)
 }

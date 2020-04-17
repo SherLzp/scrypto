@@ -24,3 +24,7 @@ func ModInverse(a, N *big.Int) (res *big.Int) {
 	res = new(big.Int).ModInverse(a, N)
 	return res
 }
+
+func Neg(a *big.Int) (res *big.Int) {
+	return new(big.Int).Neg(a)
+}
