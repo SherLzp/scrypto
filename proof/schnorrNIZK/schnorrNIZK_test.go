@@ -51,4 +51,5 @@ func TestSchnorrNIZK_Verify(t *testing.T) {
 		panic(err)
 	}
 	fmt.Println("Verify result:", res)
+	
 }

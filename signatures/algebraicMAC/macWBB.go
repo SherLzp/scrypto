@@ -118,7 +118,7 @@ func TryOnce() {
 		panic(err)
 	}
 	for i, sigma := range sigmas {
-		fmt.Println("sigma"+string(i)+":", p256Utils.Marshal(sigma))
+		fmt.Println("sigma ", i, ":", p256Utils.Marshal(sigma))
 	}
 	fmt.Println("sigmas size:", len(sigmas))
 	res, err := mac.Verify(sk, mVec, sigmas[0])

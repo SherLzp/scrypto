@@ -1,6 +1,8 @@
 package main
 
-import "shercrypto/proof/credentials"
+import (
+	"shercrypto/proof/credentials"
+)
 
 func main() {
 	//sherAes.TryOnce()
