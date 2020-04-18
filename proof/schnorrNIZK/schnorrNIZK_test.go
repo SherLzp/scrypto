@@ -1,49 +1,54 @@
 package schnorrNIZK
 
 import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
 	"fmt"
+	"golang.org/x/crypto/bn256"
 	"math/big"
-	"shercrypto/ecc/p256Utils"
+	"shercrypto/ecc/bn256Utils"
 	"testing"
 )
 
 func TestSchnorrNIZK_Prove(t *testing.T) {
-	p256 := elliptic.P256()
-	nizk := NewSchnorrNIZK(p256)
-	secret := new(big.Int).SetBytes([]byte("Sher Lin"))
-	aPriKey, err := ecdsa.GenerateKey(p256, rand.Reader)
+	nizk := NewSchnorrNIZK(bn256.Order)
+	// we generate prove: A = g^{a}
+	base := bn256Utils.G1ScalarBaseMult(new(big.Int).SetInt64(1))
+	a, A, err := bn256.RandomG1(rand.Reader)
+	fmt.Println("Alice public key and proof relation: ", A.String())
 	if err != nil {
-		fmt.Println("Generate key error:", err)
+		panic(err)
 	}
-	A := aPriKey.PublicKey
-	X, V, r, err := nizk.Prove(secret, &A)
+	nizk.AddPair(a, base)
+	prove, err := nizk.Prove(A, A, nil)
 	if err != nil {
-		fmt.Println("Prove error:", err)
+		panic(err)
 	}
-	fmt.Println("X:", p256Utils.Marshal(X))
-	fmt.Println("V:", p256Utils.Marshal(V))
-	fmt.Println("r:", r)
+	fmt.Println("Prove owner:", prove.Owner.String())
+	fmt.Println("Prove s.t.:", prove.Relation.String())
+	fmt.Println("Prove commitment:", prove.Commitment)
 }
 
 func TestSchnorrNIZK_Verify(t *testing.T) {
-	p256 := elliptic.P256()
-	nizk := NewSchnorrNIZK(p256)
-	secret := new(big.Int).SetBytes([]byte("Sher Lin"))
-	aPriKey, err := ecdsa.GenerateKey(p256, rand.Reader)
+	nizk := NewSchnorrNIZK(bn256.Order)
+	// we generate prove: A = g^{a}
+	base := bn256Utils.G1ScalarBaseMult(new(big.Int).SetInt64(1))
+	a, A, err := bn256.RandomG1(rand.Reader)
+	fmt.Println("Alice public key and proof relation: ", A.String())
 	if err != nil {
-		fmt.Println("Generate key error:", err)
+		panic(err)
 	}
-	A := aPriKey.PublicKey
-	X, V, r, err := nizk.Prove(secret, &A)
+	nizk.AddPair(a, base)
+	prove, err := nizk.Prove(A, A, nil)
 	if err != nil {
-		fmt.Println("Generate prove error:", err)
+		panic(err)
 	}
-	res, err := nizk.Verify(&A, X, V, r)
+	fmt.Println("Prove owner:", prove.Owner.String())
+	fmt.Println("Prove s.t.:", prove.Relation.String())
+	fmt.Println("Prove commitment:", prove.Commitment)
+	prove.Relation = A
+	res, err := nizk.Verify(prove, nil)
 	if err != nil {
-		fmt.Println("Verify error:", err)
+		panic(err)
 	}
 	fmt.Println("Verify result:", res)
 }

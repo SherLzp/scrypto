@@ -188,7 +188,7 @@ func TryOnce() {
 	}
 	fmt.Println("SelectiveCredential:", selectiveCredential)
 	for i, attr := range selectiveCredential.Credential.Attributes {
-		fmt.Println("attr ", string(i), " :", attr)
+		fmt.Println("attr ", i, " :", attr)
 	}
 	res, err := credentialScheme.Verify(selectiveCredential, nil, pk)
 	if err != nil {
