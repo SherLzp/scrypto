@@ -18,8 +18,7 @@ The project is a crypto library written by [myself](https://www.sher.vip). This 
 - [x] P256(secp256k1)
 - [x] BN256
 - [ ] Curve25519(ed25519)
-- [ ] BLS381
-- [ ] BLS377
+- [x] BLS12-381
 
 # Algorithms
 
