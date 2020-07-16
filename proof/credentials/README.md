@@ -12,7 +12,7 @@ public $\bar{S} = \bar{K}^a,\bar{S_0} = \bar{K}^{a_0}$ where $\bar{K} \in_R G_1$
 
 User:
 $$
-choose \ \alpha,\kappa' \in_R \mathbb{Z}_p^* \\set \ S = \bar{S}^{\alpha},S_0 = \bar{S_0}^{\alpha} \\SPK\{(\kappa',k_0): R=S^{\kappa'} S_0^{k_0} \} \\sends \ S,S_0,R=S^{\kappa'} S_0^{k_0} \text{ to issuer}
+choose \ \alpha,\kappa' \in_R \mathbb{Z}_p^* \\set \ S = \bar{S}^{\alpha},S_0 = \bar{S_0}^{\alpha} \\PK\{(\kappa',k_0): R=S^{\kappa'} S_0^{k_0} \} \\sends \ S,S_0,R=S^{\kappa'} S_0^{k_0} \text{ to issuer}
 $$
 Issuer:
 $$
@@ -36,7 +36,7 @@ choose \ \alpha,\beta \in_R \mathbb{Z}_p^* \\
 set \ \bar{K} = K^{\alpha}, \bar{S} = S^{\alpha},\bar{S}_i = S_i^{\alpha} \forall i \in [0,n] \\
 set \ \tilde{C} = C^{\alpha \cdot \beta}, \tilde{T} = T^{\alpha \cdot \beta} \\
 set \ R = \bar{K} \prod_{i \in D} \bar{S_i}^{k_i} \\
-SPK\{(\beta,\kappa,k_0,(k_i)_{i \in \mathcal{C}}): \tilde{C} = R^{\beta} \bar{S}^{\kappa \cdot \beta} \bar{S_0}^{k_0 \cdot \beta} \prod_{i \in \mathcal{C}} \bar{S_i}^{k_i \cdot \beta} \} \\
+PK\{(\beta,\kappa,k_0,(k_i)_{i \in \mathcal{C}}): \tilde{C} = R^{\beta} \bar{S}^{\kappa \cdot \beta} \bar{S_0}^{k_0 \cdot \beta} \prod_{i \in \mathcal{C}} \bar{S_i}^{k_i \cdot \beta} \} \\
 sends \ \bar{K},\bar{S},(\bar{S_i})_{i=0,...,n},\tilde{C},\tilde{T} \text{ to Verifier}
 $$
 $Verify$:
@@ -52,7 +52,7 @@ $$
 
 
 
-$SPK\{(\beta,\kappa,k_0,(k_i)_{i \in \mathcal{C}}): \tilde{C} = R^{\beta} \bar{S}^{\kappa \cdot \beta} \bar{S_0}^{k_0 \cdot \beta} \prod_{i \in \mathcal{C}} \bar{S_i}^{k_i \cdot \beta} \}$：
+$PK\{(\beta,\kappa,k_0,(k_i)_{i \in \mathcal{C}}): \tilde{C} = R^{\beta} \bar{S}^{\kappa \cdot \beta} \bar{S_0}^{k_0 \cdot \beta} \prod_{i \in \mathcal{C}} \bar{S_i}^{k_i \cdot \beta} \}$：
 
 关系等式$R$：
 $$
@@ -89,7 +89,7 @@ t = R^{s_0} \cdot \bar{S}^{s_1} \cdot \bar{S_i}^{s_i} \cdot \tilde{C}^{c} \\
 t = R^{s_0} \cdot \bar{S}^{s_1} \cdot \bar{S_i}^{s_i} \cdot (\bar{C}^{\beta})^{c} \\
 t = (R)^{r_0 - c\beta} \cdot \bar{S}^{r_1 - c \kappa \beta} \cdot (\prod_{i \in \mathcal{C}} \bar{S_i}^{r_i - c k_i \beta}) \cdot (R \cdot \bar{S} \cdot \prod_{i \in \mathcal{C}}\bar{S_i}^{k_i})^{c \beta} \\
 t = R^{r_0} \cdot \bar{S}^{r_1} \cdot \prod_{i \in \mathcal{C}}\bar{S_i}^{k_i} \\
-t = \prod_{i = [0,n]} t_i
+t = \prod_{i = [0,n]} t_i
 $$
 
 # References

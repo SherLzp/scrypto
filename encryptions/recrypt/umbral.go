@@ -10,9 +10,9 @@ import (
 	"math/big"
 	"shercrypto/ecc/p256Utils"
 	"shercrypto/encryptions/sherAes"
-	sherMath "shercrypto/math"
+	"shercrypto/sherUtils"
 	"shercrypto/signatures/ecdsa"
-	sherUtils "shercrypto/utils"
+	sherMath "shercrypto/xmath"
 )
 
 type CurvePoint = ecdsa.PublicKey
@@ -55,7 +55,7 @@ func (this *Umbral) encryptKeyGen(pubKey *ecdsa.PublicKey) (capsule *Capsule, ke
 	// get (pk_A)^{e+v}
 	point := p256Utils.ScalarMult(pubKey, sherMath.Add(e.D, v.D, this.N))
 	// generate aes key
-	keyBytes, err = sherUtils.Sha3Hash(p256Utils.Marshal(point))
+	keyBytes, err = sherUtils.GetSha3HashBytes(p256Utils.Marshal(point))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -72,7 +72,7 @@ func (this *Umbral) RecreateAESKeyByMyPriKey(capsule *Capsule, aPriKey *ecdsa.Pr
 	point := p256Utils.ScalarAdd(capsule.E, capsule.V)
 	point = p256Utils.ScalarMult(point, aPriKey.D)
 	// generate aes key
-	keyBytes, err = sherUtils.Sha3Hash(p256Utils.Marshal(point))
+	keyBytes, err = sherUtils.GetSha3HashBytes(p256Utils.Marshal(point))
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (this *Umbral) RecreateAESKeyByMyPriKey(capsule *Capsule, aPriKey *ecdsa.Pr
 }
 
 func (this *Umbral) RecreateAESKeyByMyPriKeyStr(capsule *Capsule, aPriKeyStr string) (keyBytes []byte, err error) {
-	aPriKey, err := p256Utils.PrivateKeyStrToKey(aPriKeyStr)
+	aPriKey, err := p256Utils.ConvertSkStrToSk(aPriKeyStr)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (this *Umbral) Encrypt(message []byte, pubKey *ecdsa.PublicKey) (cipherText
 }
 
 func (this *Umbral) EncryptByStr(message, pubKeyStr string) (cipherText []byte, capsule *Capsule, err error) {
-	key, err := p256Utils.PublicKeyStrToKey(pubKeyStr)
+	key, err := p256Utils.ConvertPkStrToPk(pubKeyStr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -145,11 +145,11 @@ func (this *Umbral) ReKeyGen(aPriKey *ecdsa.PrivateKey, bPubKey *ecdsa.PublicKey
 }
 
 func (this *Umbral) ReKeyGenByStr(aPriKeyStr, bPubKeyStr string) (rk *big.Int, pubX *ecdsa.PublicKey, err error) {
-	aPriKey, err := p256Utils.PrivateKeyStrToKey(aPriKeyStr)
+	aPriKey, err := p256Utils.ConvertSkStrToSk(aPriKeyStr)
 	if err != nil {
 		return nil, nil, err
 	}
-	bPubKey, err := p256Utils.PublicKeyStrToKey(bPubKeyStr)
+	bPubKey, err := p256Utils.ConvertPkStrToPk(bPubKeyStr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -188,7 +188,7 @@ func (this *Umbral) decryptKeyGen(bPriKey *ecdsa.PrivateKey, capsule *Capsule, p
 	// recreate d = H3(X_A || pk_B || S)
 	d := p256Utils.HashToCurve(sherUtils.ContactBytes(pubXBytes, pubBBytes, SBytes))
 	point := p256Utils.ScalarMult(p256Utils.ScalarAdd(capsule.E, capsule.V), d)
-	keyBytes, err = sherUtils.Sha3Hash(p256Utils.Marshal(point))
+	keyBytes, err = sherUtils.GetSha3HashBytes(p256Utils.Marshal(point))
 	if err != nil {
 		return nil, err
 	}
@@ -213,11 +213,11 @@ func (this *Umbral) Decrypt(bPriKey *ecdsa.PrivateKey, capsule *Capsule, pubX *e
 }
 
 func (this *Umbral) DecryptByStr(bPriKeyStr string, capsule *Capsule, pubXStr string, cipherText []byte) (plainText []byte, err error) {
-	bPriKey, err := p256Utils.PrivateKeyStrToKey(bPriKeyStr)
+	bPriKey, err := p256Utils.ConvertSkStrToSk(bPriKeyStr)
 	if err != nil {
 		return nil, err
 	}
-	pubX, err := p256Utils.PublicKeyStrToKey(pubXStr)
+	pubX, err := p256Utils.ConvertPkStrToPk(pubXStr)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func (this *Umbral) DecryptOnMyPriKey(aPriKey *ecdsa.PrivateKey, capsule *Capsul
 }
 
 func (this *Umbral) DecryptOnMyOwnStrKey(aPriKeyStr string, capsule *Capsule, cipherText []byte) (plainText []byte, err error) {
-	aPriKey, err := p256Utils.PrivateKeyStrToKey(aPriKeyStr)
+	aPriKey, err := p256Utils.ConvertSkStrToSk(aPriKeyStr)
 	if err != nil {
 		return nil, err
 	}

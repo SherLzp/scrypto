@@ -1,4 +1,4 @@
-package schnorrNIZK
+package sigmaProtocol
 
 import (
 	"crypto/rand"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestSchnorrNIZK_Prove(t *testing.T) {
-	nizk := NewSchnorrNIZK(bn256.Order)
+	nizk := NewSigmaNIZK(bn256.Order)
 	// we generate prove: A = g^{a}
 	base := bn256Utils.G1ScalarBaseMult(new(big.Int).SetInt64(1))
 	a, A, err := bn256.RandomG1(rand.Reader)
@@ -29,7 +29,7 @@ func TestSchnorrNIZK_Prove(t *testing.T) {
 }
 
 func TestSchnorrNIZK_Verify(t *testing.T) {
-	nizk := NewSchnorrNIZK(bn256.Order)
+	nizk := NewSigmaNIZK(bn256.Order)
 	// we generate prove: A = g^{a}
 	base := bn256Utils.G1ScalarBaseMult(new(big.Int).SetInt64(1))
 	a, A, err := bn256.RandomG1(rand.Reader)
@@ -51,5 +51,5 @@ func TestSchnorrNIZK_Verify(t *testing.T) {
 		panic(err)
 	}
 	fmt.Println("Verify result:", res)
-	
+
 }

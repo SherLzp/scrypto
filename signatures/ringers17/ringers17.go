@@ -3,34 +3,180 @@ package ringers17
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/bn256"
 	"math/big"
 	"shercrypto/ecc/bn256Utils"
-	sherMath "shercrypto/math"
+	sherMath "shercrypto/xmath"
+	"strconv"
+	"strings"
 )
 
 type sigOfRingers struct {
 	P *big.Int
 }
 
+const (
+	RingersPK_Q  = "Q"
+	RingersPK_A  = "A"
+	RingersPK_As = "As"
+	RingersPK_N  = "N"
+	RingersPK_Z  = "Z"
+	Sigma_Kappa  = "Kappa"
+	Sigma_K      = "K"
+	Sigma_S      = "S"
+	Sigma_Ss     = "Ss"
+	Sigma_N      = "N"
+	Sigma_C      = "C"
+	Sigma_T      = "T"
+)
+
 type RingersPK struct {
-	Q  *bn256.G2
-	A  *bn256.G2
-	As []*bn256.G2
-	N  int
-	Z  *bn256.G2
+	Q  *bn256.G2   `json:"Q"`
+	A  *bn256.G2   `json:"A"`
+	As []*bn256.G2 `json:"As"`
+	N  int         `json:"N"`
+	Z  *bn256.G2   `json:"Z"`
 }
 
+// Serialize RingersPK
+func (pk *RingersPK) MarshalJSON() ([]byte, error) {
+	kv := make(map[string]string)
+	kv[RingersPK_Q] = hex.EncodeToString(pk.Q.Marshal())
+	kv[RingersPK_A] = hex.EncodeToString(pk.A.Marshal())
+	var AsSlice []string
+	for _, A := range pk.As {
+		AiStr := hex.EncodeToString(A.Marshal())
+		AsSlice = append(AsSlice, AiStr)
+	}
+	AsStr := strings.Join(AsSlice, ",")
+	kv[RingersPK_As] = AsStr
+	kv[RingersPK_N] = strconv.FormatInt(int64(pk.N), 10)
+	kv[RingersPK_Z] = hex.EncodeToString(pk.Z.Marshal())
+	return json.Marshal(kv)
+}
+
+// Deserialize RingersPK
+func (pk *RingersPK) UnmarshalJSON(data []byte) error {
+	// get kv first
+	kv := make(map[string]string)
+	err := json.Unmarshal(data, &kv)
+	if err != nil {
+		return err
+	}
+	// get attributes of RingersPK
+	Qbytes, err := hex.DecodeString(kv[RingersPK_Q])
+	Abytes, err := hex.DecodeString(kv[RingersPK_A])
+	Zbytes, err := hex.DecodeString(kv[RingersPK_Z])
+	N, err := strconv.Atoi(kv[RingersPK_N])
+	if err != nil {
+		return err
+	}
+	Q, res := new(bn256.G2).Unmarshal(Qbytes)
+	A, res := new(bn256.G2).Unmarshal(Abytes)
+	Z, res := new(bn256.G2).Unmarshal(Zbytes)
+	if !res {
+		return errors.New("error when unmarshal G2 point")
+	}
+	AsSlice := strings.Split(kv[RingersPK_As], ",")
+	for _, v := range AsSlice {
+		AiBytes, err := hex.DecodeString(v)
+		if err != nil {
+			return err
+		}
+		Ai, res := new(bn256.G2).Unmarshal(AiBytes)
+		if !res {
+			return errors.New("error when unmarshal G2 point")
+		}
+		pk.As = append(pk.As, Ai)
+	}
+	pk.Q = Q
+	pk.A = A
+	pk.Z = Z
+	pk.N = N
+	return nil
+}
+
+// Ringers Algorithm Signature
 type Sigma struct {
-	Kappa *big.Int
-	K     *bn256.G1
-	S     *bn256.G1
-	Ss    []*bn256.G1
-	N     int
-	C     *bn256.G1
-	T     *bn256.G1
+	Kappa *big.Int    `json:"Kappa"`
+	K     *bn256.G1   `json:"K"`
+	S     *bn256.G1   `json:"S"`
+	Ss    []*bn256.G1 `json:"Ss"`
+	N     int         `json:"N"`
+	C     *bn256.G1   `json:"C"`
+	T     *bn256.G1   `json:"T"`
+}
+
+// serialize Sigma
+func (sigma *Sigma) MarshalJSON() ([]byte, error) {
+	kv := make(map[string]string)
+	kv[Sigma_Kappa] = hex.EncodeToString(sigma.Kappa.Bytes())
+	kv[Sigma_K] = hex.EncodeToString(sigma.K.Marshal())
+	kv[Sigma_S] = hex.EncodeToString(sigma.S.Marshal())
+	kv[Sigma_N] = strconv.FormatInt(int64(sigma.N), 10)
+	kv[Sigma_C] = hex.EncodeToString(sigma.C.Marshal())
+	kv[Sigma_T] = hex.EncodeToString(sigma.T.Marshal())
+	var slice []string
+	for _, Si := range sigma.Ss {
+		SiStr := hex.EncodeToString(Si.Marshal())
+		slice = append(slice, SiStr)
+	}
+	SsStr := strings.Join(slice, ",")
+	kv[Sigma_Ss] = SsStr
+	return json.Marshal(kv)
+}
+
+// deserialize Sigma
+func (sigma *Sigma) UnmarshalJSON(data []byte) error {
+	// get kv map first
+	kv := make(map[string]string)
+	err := json.Unmarshal(data, &kv)
+	if err != nil {
+		return err
+	}
+	// get attributes of Sigma
+	KappaBytes, err := hex.DecodeString(kv[Sigma_Kappa])
+	KBytes, err := hex.DecodeString(kv[Sigma_K])
+	SBytes, err := hex.DecodeString(kv[Sigma_S])
+	N, err := strconv.Atoi(kv[Sigma_N])
+	if err != nil {
+		return err
+	}
+	CBytes, err := hex.DecodeString(kv[Sigma_C])
+	TBytes, err := hex.DecodeString(kv[Sigma_T])
+	if err != nil {
+		return err
+	}
+	Kappa := new(big.Int).SetBytes(KappaBytes)
+	K, res := new(bn256.G1).Unmarshal(KBytes)
+	S, res := new(bn256.G1).Unmarshal(SBytes)
+	C, res := new(bn256.G1).Unmarshal(CBytes)
+	T, res := new(bn256.G1).Unmarshal(TBytes)
+	if !res {
+		return errors.New("error when unmarshal G2 point")
+	}
+	SsSlice := strings.Split(kv[Sigma_Ss], ",")
+	for _, v := range SsSlice {
+		SiBytes, err := hex.DecodeString(v)
+		if err != nil {
+			return err
+		}
+		Si, res := new(bn256.G1).Unmarshal(SiBytes)
+		if !res {
+			return errors.New("error when unmarshal G2 point")
+		}
+		sigma.Ss = append(sigma.Ss, Si)
+	}
+	sigma.Kappa = Kappa
+	sigma.K = K
+	sigma.S = S
+	sigma.C = C
+	sigma.T = T
+	sigma.N = N
+	return nil
 }
 
 func NewSigOfRingers() (ringersSigner *sigOfRingers) {
@@ -215,7 +361,17 @@ func TryOnce() {
 		panic(err)
 	}
 	fmt.Println("sk size:", len(sk))
-	fmt.Println("pk:", pk)
+	pkBytes, err := json.Marshal(pk)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("pk json:", string(pkBytes))
+	var pkCopy RingersPK
+	err = json.Unmarshal(pkBytes, &pkCopy)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("pk copy:", pkCopy)
 	var ks []*big.Int
 	for i := 0; i < 2; i++ {
 		ki := new(big.Int).SetInt64(int64(i + 5))
@@ -225,8 +381,18 @@ func TryOnce() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("sigma:", sigma)
-	res, err := ringersSigner.Verify(ks, sigma, pk)
+	sigmaBytes, err := json.Marshal(sigma)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("sigma json:", string(sigmaBytes))
+	var sigmaCopy Sigma
+	err = json.Unmarshal(sigmaBytes, &sigmaCopy)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("sigma copy:", sigmaCopy)
+	res, err := ringersSigner.Verify(ks, &sigmaCopy, &pkCopy)
 	if err != nil {
 		panic(err)
 	}

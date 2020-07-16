@@ -88,6 +88,7 @@ func TryOnce() {
 	// message you want to encrypt
 	plainText := []byte("Hello World")
 	fmt.Println("PlainText:", string(plainText))
+	fmt.Println("plaintext length:", len(plainText))
 	// key size should larger than 32 bytes
 	key := []byte("key:12345678912345678912345678912345789")
 	// nonce
@@ -97,10 +98,12 @@ func TryOnce() {
 		panic(err)
 	}
 	fmt.Println("CipherText:", hex.EncodeToString(cipherText))
+	fmt.Println("cipherText length:", len(cipherText))
 	decryptText, err := aesGCMCipher.Decrypt(cipherText, key, iv, nil)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Text after decryption:", string(decryptText))
+	fmt.Println("Text after decryption length:", len(string(decryptText)))
 	fmt.Println("-----------AES GCM end-------------")
 }

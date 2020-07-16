@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"math/big"
 	"shercrypto/ecc/p256Utils"
-	sherMath "shercrypto/math"
+	sherMath "shercrypto/xmath"
 )
 
 type macWBB struct {

@@ -7,10 +7,10 @@ import (
 	"golang.org/x/crypto/bn256"
 	"math/big"
 	"shercrypto/ecc/bn256Utils"
-	sherMath "shercrypto/math"
-	"shercrypto/proof/schnorrNIZK"
+	"shercrypto/proof/sigmaProtocol"
+	"shercrypto/sherUtils"
 	"shercrypto/signatures/ringers17"
-	sherUtils "shercrypto/utils"
+	sherMath "shercrypto/xmath"
 )
 
 type ringersCredential struct {
@@ -18,13 +18,22 @@ type ringersCredential struct {
 }
 
 type Credential struct {
-	Attributes []*big.Int
-	Sigma      *ringers17.Sigma
+	Keys        []string
+	Claim       map[string]*big.Int
+	Sigma       *ringers17.Sigma
+	Proof       *sigmaProtocol.ProveScheme
+	IsSelective bool
 }
 
-type SelectiveCredential struct {
-	Credential *Credential
-	Proof      *schnorrNIZK.ProveScheme
+func (credential *Credential) AddClaimInfo(key string, value *big.Int) {
+	if credential.Claim != nil {
+		if _, ok := credential.Claim[key]; ok { // if key already exists
+			credential.Claim[key] = value
+		} else { // if key not exists
+			credential.Claim[key] = value
+			credential.Keys = append(credential.Keys, key)
+		}
+	}
 }
 
 func NewRingersCredential() (credentialScheme *ringersCredential) {
@@ -34,7 +43,7 @@ func NewRingersCredential() (credentialScheme *ringersCredential) {
 	return credentialScheme
 }
 
-func (this *ringersCredential) ProverKeyGen() (sk *big.Int, pk *bn256.G1, err error) {
+func (ringers *ringersCredential) ProverKeyGen() (sk *big.Int, pk *bn256.G1, err error) {
 	sk, pk, err = bn256.RandomG1(rand.Reader)
 	if err != nil {
 		return nil, nil, err
@@ -42,47 +51,55 @@ func (this *ringersCredential) ProverKeyGen() (sk *big.Int, pk *bn256.G1, err er
 	return sk, pk, nil
 }
 
-func (this *ringersCredential) Issue(ks []*big.Int, sk []*big.Int) (credential *Credential, err error) {
+// issue credential
+func (ringers *ringersCredential) Issue(claim map[string]*big.Int, sk []*big.Int) (credential *Credential, err error) {
 	ringersSigner := ringers17.NewSigOfRingers()
+	var keys []string
+	var ks []*big.Int
+	for key, attribute := range claim {
+		keys = append(keys, key)
+		ks = append(ks, attribute)
+	}
 	sigma, err := ringersSigner.Sign(ks, sk)
 	if err != nil {
 		return nil, err
 	}
 	credential = new(Credential)
-	credential.Attributes = ks
+	credential.Keys = keys
+	credential.Claim = claim
 	credential.Sigma = sigma
 	return credential, nil
 }
 
-func hideAttributes(attributes []*big.Int, D []int) (hidedSet []*big.Int, err error) {
-	if len(attributes) != len(D) {
-		return nil, errors.New("attributes count not match, len(attributes) != len(D)")
-	}
-	count := len(D)
-	for i := 0; i < count; i++ {
-		// hide attribute
-		if D[i] == 0 {
-			hidedAttr, err := sherUtils.Sha3Hash(attributes[i].Bytes())
+// hide attributes
+func hideAttributes(claim map[string]*big.Int, C map[string]bool) (hidedPairs map[string]*big.Int, err error) {
+	hidedPairs = make(map[string]*big.Int)
+	// find which attribute needs to be hided
+	for key, attribute := range claim {
+		if _, ok := C[key]; ok {
+			// calculate commitment
+			commitmentBytes, err := sherUtils.ComputeCommitmentBytes(claim[key])
 			if err != nil {
 				return nil, err
 			}
-			ai := new(big.Int).SetBytes(hidedAttr)
-			hidedSet = append(hidedSet, ai)
-			continue
+			ai := new(big.Int).SetBytes(commitmentBytes)
+			hidedPairs[key] = ai
+		} else {
+			hidedPairs[key] = attribute
 		}
-		hidedSet = append(hidedSet, attributes[i])
 	}
-	return hidedSet, nil
+	return hidedPairs, nil
 }
 
-func (this *ringersCredential) ShowCredential(credential *Credential, pk *bn256.G1, D []int) (selectiveCredential *SelectiveCredential, err error) {
-	selectiveCredential = new(SelectiveCredential)
+// 展示凭证，选择性披露
+func (ringers *ringersCredential) ShowCredential(credential *Credential, pk *bn256.G1, C map[string]bool) (selectiveCredential *Credential, err error) {
 	// create a new credential
-	newCredential := new(Credential)
+	selectiveCredential = new(Credential)
+	// get signature
 	oldSigma := credential.Sigma
 	// hide attributes
 	// subSet is the hided attributes set
-	hidedSet, err := hideAttributes(credential.Attributes, D)
+	hidedPairs, err := hideAttributes(credential.Claim, C)
 	if err != nil {
 		return nil, err
 	}
@@ -92,32 +109,33 @@ func (this *ringersCredential) ShowCredential(credential *Credential, pk *bn256.
 	if err != nil {
 		return nil, err
 	}
-	newCredential.Sigma = newSigma
-	newCredential.Attributes = hidedSet
-	// SPK{(\beta,\kappa,(k_i)_{i \in \mathcal{C}}): D = \tilde{C}^{\beta} * \bar{S}^{\kappa} * \bar{S_i}^{k_i} }
+	selectiveCredential.Sigma = newSigma
+	selectiveCredential.Keys = credential.Keys
+	selectiveCredential.Claim = hidedPairs
+	// SPK{(\beta,\kappa,(k_i)_{i \in \mathcal{C}}): C = \tilde{C}^{\beta} * \bar{S}^{\kappa} * \bar{S_i}^{k_i} }
 	// i \in \mathcal{C}
-	nizk := schnorrNIZK.NewSchnorrNIZK(this.P)
+	nizk := sigmaProtocol.NewSigmaNIZK(ringers.P)
 	// secret: \beta, \kappa * \beta , k_i * \beta
-	// public: D, \bar{S}, \bar{S_i}
-	// D = \bar{K} * \prod_{i \in \mathcal{D}} \bar{S_i}^{k_i}
+	// public: C, \bar{S}, \bar{S_i}
+	// C = \bar{K} * \prod_{i \in \mathcal{C}} \bar{S_i}^{k_i}
 	R := newSigma.K
 	//var optionDataPre []byte
-	for i := 0; i < len(D); i++ {
-		if D[i] == 0 { // attribute which needs to hide
-			attr := credential.Attributes[i]
-			ki_beta := sherMath.Mul(attr, beta, this.P)
-			nizk.AddPair(ki_beta, newSigma.Ss[i])
-			//optionDataPre = append(optionDataPre, credential.Attributes[i].Bytes()...)
+	for i, key := range credential.Keys {
+		attr := credential.Claim[key]
+		if _, ok := C[key]; ok {
+			ki_beta := sherMath.Mul(attr, beta, nizk.P)
+			ssi := newSigma.Ss[i]
+			nizk.AddPair(ki_beta, ssi)
 		} else {
-			Si_ki := bn256Utils.G1ScalarMult(newSigma.Ss[i], credential.Attributes[i])
+			Si_ki := bn256Utils.G1ScalarMult(newSigma.Ss[i], attr)
 			R = bn256Utils.G1Add(R, Si_ki)
 		}
 	}
 	nizk.AddPair(beta, R)
-	kappa_beta := sherMath.Mul(newSigma.Kappa, beta, this.P)
+	kappa_beta := sherMath.Mul(newSigma.Kappa, beta, ringers.P)
 	nizk.AddPair(kappa_beta, newSigma.S)
 	// optionData H(k_i) i \in \mathcal{C}
-	//optionData, err := sherUtils.Sha3Hash(optionDataPre)
+	//optionData, err := sherUtils.GetSha3HashBytes(optionDataPre)
 	//if err != nil {
 	//	return nil, err
 	//}
@@ -125,30 +143,31 @@ func (this *ringersCredential) ShowCredential(credential *Credential, pk *bn256.
 	if err != nil {
 		return nil, err
 	}
-	selectiveCredential.Credential = newCredential
 	selectiveCredential.Proof = prove
+	selectiveCredential.IsSelective = true
 	return selectiveCredential, nil
 }
 
-func (this *ringersCredential) Verify(credential *SelectiveCredential, optionData []byte, pk *ringers17.RingersPK) (res bool, err error) {
-	// verify zk proof
-	nizk := schnorrNIZK.NewSchnorrNIZK(this.P)
-	zkRes, err := nizk.Verify(credential.Proof, optionData)
-	if err != nil {
-		return false, err
+func (ringers *ringersCredential) Verify(credential *Credential, optionData []byte, pk *ringers17.RingersPK) (res bool, err error) {
+	var ks []*big.Int
+	for _, key := range credential.Keys {
+		if _, ok := credential.Claim[key]; !ok {
+			return false, errors.New("error with the mapping keys")
+		}
+		ks = append(ks, credential.Claim[key])
 	}
-	if !zkRes {
-		return false, err
-	}
+	// verify credential signature
 	ringersSigner := ringers17.NewSigOfRingers()
-	ks := credential.Credential.Attributes
-	sigma := credential.Credential.Sigma
-	//choose \ r,r_0,...,r_n \in_R \mathbb{Z}_p^* \\
-	//verify \ e(\tilde{C},Z) \overset{?}{=} e(\tilde{T},Q) \\
-	//and \ e(\bar{S}^r \prod_{i=0}^n \bar{S_i}^{r_i},Q) \overset{?}{=} e(\bar{K},A^r \prod_{i=0}^n A_i^{r_i})
-	res, err = ringersSigner.Verify(ks, sigma, pk)
-	if err != nil {
-		return false, err
+	res, err = ringersSigner.Verify(ks, credential.Sigma, pk)
+	// verify selective credential
+	if credential.IsSelective && credential.Proof != nil {
+		// verify zk proof
+		nizk := sigmaProtocol.NewSigmaNIZK(ringers.P)
+		zkRes, err := nizk.Verify(credential.Proof, optionData)
+		if err != nil {
+			return false, err
+		}
+		res = res && zkRes
 	}
 	return res, nil
 }
@@ -160,35 +179,40 @@ func TryOnce() {
 	if err != nil {
 		panic(err)
 	}
-	var ks []*big.Int
-	for i := 0; i < 3; i++ {
-		ki := new(big.Int).SetInt64(int64(i + 3))
-		ks = append(ks, ki)
-	}
+	claim := make(map[string]*big.Int)
+	claim["name"] = new(big.Int).SetBytes([]byte("Sher"))
+	claim["identity number"] = new(big.Int).SetBytes([]byte("330xxxxxxxxx"))
+	claim["birthday"] = new(big.Int).SetBytes([]byte("1995-05-09"))
 	credentialScheme := NewRingersCredential()
-	credential, err := credentialScheme.Issue(ks, sk)
+	credential, err := credentialScheme.Issue(claim, sk)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Credential:", credential)
-	for i, attr := range credential.Attributes {
-		fmt.Println("attr ", i, " :", attr)
+	for k, v := range credential.Claim {
+		fmt.Printf("Key is: %s, Value is: %s \n", k, v.Bytes())
 	}
 	// verify signature
-	newCredVerify, err := ringersSigner.Verify(credential.Attributes, credential.Sigma, pk)
+	var attributes []*big.Int
+	for _, attribute := range credential.Claim {
+		attributes = append(attributes, attribute)
+	}
+	newCredVerify, err := credentialScheme.Verify(credential, nil, pk)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Verify origin credential:", newCredVerify)
 	_, A, _ := credentialScheme.ProverKeyGen()
-	D := []int{1, 1, 0}
-	selectiveCredential, err := credentialScheme.ShowCredential(credential, A, D)
+	C := make(map[string]bool)
+	C["name"] = true
+	C["birthday"] = true
+	selectiveCredential, err := credentialScheme.ShowCredential(credential, A, C)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("SelectiveCredential:", selectiveCredential)
-	for i, attr := range selectiveCredential.Credential.Attributes {
-		fmt.Println("attr ", i, " :", attr)
+	for k, v := range selectiveCredential.Claim {
+		fmt.Printf("Key is: %s, Value is: %s \n", k, v.Bytes())
 	}
 	res, err := credentialScheme.Verify(selectiveCredential, nil, pk)
 	if err != nil {
