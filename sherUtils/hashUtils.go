@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"hash"
 	"math/big"
 	"shercrypto/ecc/p256Utils"
 )
@@ -19,6 +20,18 @@ func GetSha3HashBytes(m []byte) (hash []byte, err error) {
 		return nil, err
 	}
 	return sha.Sum(nil), nil
+}
+
+/**
+	计算哈希值
+ */
+func GetHashValue(m []byte, hFunction func() hash.Hash) ([]byte, error) {
+	h := hFunction()
+	_, err := h.Write(m)
+	if err != nil {
+		return nil, err
+	}
+	return h.Sum(nil), nil
 }
 
 /**

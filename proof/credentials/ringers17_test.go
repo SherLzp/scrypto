@@ -100,7 +100,7 @@ func TestTryOnce(t *testing.T) {
 func BenchmarkRingersCredential_Issue(b *testing.B) {
 	ringersSigner := ringers17.NewSigOfRingers()
 	t1 := time.Now() // get current time
-	sks, _, err := ringersSigner.KeyGen(50)
+	sks, _, err := ringersSigner.KeyGen(100)
 	elapsed := time.Since(t1)
 	fmt.Println("生成100把密钥的时间:", elapsed)
 	ringersCredential := NewRingersCredential()
