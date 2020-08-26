@@ -1,4 +1,4 @@
-package sherUtils
+package xutils
 
 import (
 	"crypto/elliptic"

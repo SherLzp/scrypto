@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"shercrypto/ecc/bn256Utils"
 	"shercrypto/proof/sigmaProtocol"
-	"shercrypto/sherUtils"
+	"shercrypto/xutils"
 	"shercrypto/signatures/ringers17"
 	sherMath "shercrypto/xmath"
 )
@@ -78,7 +78,7 @@ func hideAttributes(claim map[string]*big.Int, C map[string]bool) (hidedPairs ma
 	for key, attribute := range claim {
 		if _, ok := C[key]; ok {
 			// calculate commitment
-			commitmentBytes, err := sherUtils.ComputeCommitmentBytes(claim[key])
+			commitmentBytes, err := xutils.ComputeCommitmentBytes(claim[key])
 			if err != nil {
 				return nil, err
 			}
@@ -135,7 +135,7 @@ func (ringers *ringersCredential) ShowCredential(credential *Credential, pk *bn2
 	kappa_beta := sherMath.Mul(newSigma.Kappa, beta, ringers.P)
 	nizk.AddPair(kappa_beta, newSigma.S)
 	// optionData H(k_i) i \in \mathcal{C}
-	//optionData, err := sherUtils.GetSha3HashBytes(optionDataPre)
+	//optionData, err := xutils.GetSha3HashBytes(optionDataPre)
 	//if err != nil {
 	//	return nil, err
 	//}

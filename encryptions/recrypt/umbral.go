@@ -10,7 +10,7 @@ import (
 	"math/big"
 	"shercrypto/ecc/p256Utils"
 	"shercrypto/encryptions/sherAes"
-	"shercrypto/sherUtils"
+	"shercrypto/xutils"
 	"shercrypto/signatures/ecdsa"
 	sherMath "shercrypto/xmath"
 )
@@ -45,7 +45,7 @@ func (this *Umbral) encryptKeyGen(pubKey *ecdsa.PublicKey) (capsule *Capsule, ke
 		return nil, nil, err
 	}
 	// get H2(E || V)
-	EV := sherUtils.ContactBytes(p256Utils.Marshal(E), p256Utils.Marshal(V))
+	EV := xutils.ContactBytes(p256Utils.Marshal(E), p256Utils.Marshal(V))
 	h := p256Utils.HashToCurve(EV)
 	if err != nil {
 		return nil, nil, err
@@ -55,7 +55,7 @@ func (this *Umbral) encryptKeyGen(pubKey *ecdsa.PublicKey) (capsule *Capsule, ke
 	// get (pk_A)^{e+v}
 	point := p256Utils.ScalarMult(pubKey, sherMath.Add(e.D, v.D, this.N))
 	// generate aes key
-	keyBytes, err = sherUtils.GetSha3HashBytes(p256Utils.Marshal(point))
+	keyBytes, err = xutils.GetSha3HashBytes(p256Utils.Marshal(point))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -72,7 +72,7 @@ func (this *Umbral) RecreateAESKeyByMyPriKey(capsule *Capsule, aPriKey *ecdsa.Pr
 	point := p256Utils.ScalarAdd(capsule.E, capsule.V)
 	point = p256Utils.ScalarMult(point, aPriKey.D)
 	// generate aes key
-	keyBytes, err = sherUtils.GetSha3HashBytes(p256Utils.Marshal(point))
+	keyBytes, err = xutils.GetSha3HashBytes(p256Utils.Marshal(point))
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (this *Umbral) ReKeyGen(aPriKey *ecdsa.PrivateKey, bPubKey *ecdsa.PublicKey
 	}
 	// get d = H3(X_A || pk_B || pk_B^{x_A})
 	Bx := p256Utils.ScalarMult(bPubKey, priX.D)
-	dPre := sherUtils.ContactBytes(p256Utils.Marshal(pubX), p256Utils.Marshal(bPubKey), p256Utils.Marshal(Bx))
+	dPre := xutils.ContactBytes(p256Utils.Marshal(pubX), p256Utils.Marshal(bPubKey), p256Utils.Marshal(Bx))
 	d := p256Utils.HashToCurve(dPre)
 	// rk = sk_A * d^{-1}
 	rk = sherMath.Mul(aPriKey.D, sherMath.ModInverse(d, this.N), this.N)
@@ -161,7 +161,7 @@ func (this *Umbral) ReEncryption(rk *big.Int, capsule *Capsule) (newCapsule *Cap
 	// check g^s == V * E^{H2(E || V)}
 	S := p256Utils.ScalarBaseMult(capsule.S)
 	h2 := p256Utils.HashToCurve(
-		sherUtils.ContactBytes(
+		xutils.ContactBytes(
 			p256Utils.Marshal(capsule.E),
 			p256Utils.Marshal(capsule.V)))
 	Eh2 := p256Utils.ScalarMult(capsule.E, h2)
@@ -186,9 +186,9 @@ func (this *Umbral) decryptKeyGen(bPriKey *ecdsa.PrivateKey, capsule *Capsule, p
 	pubBBytes := p256Utils.Marshal(&bPriKey.PublicKey)
 	pubXBytes := p256Utils.Marshal(pubX)
 	// recreate d = H3(X_A || pk_B || S)
-	d := p256Utils.HashToCurve(sherUtils.ContactBytes(pubXBytes, pubBBytes, SBytes))
+	d := p256Utils.HashToCurve(xutils.ContactBytes(pubXBytes, pubBBytes, SBytes))
 	point := p256Utils.ScalarMult(p256Utils.ScalarAdd(capsule.E, capsule.V), d)
-	keyBytes, err = sherUtils.GetSha3HashBytes(p256Utils.Marshal(point))
+	keyBytes, err = xutils.GetSha3HashBytes(p256Utils.Marshal(point))
 	if err != nil {
 		return nil, err
 	}

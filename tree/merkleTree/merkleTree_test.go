@@ -3,7 +3,7 @@ package merkleTree
 import (
 	"crypto/sha256"
 	"fmt"
-	"shercrypto/sherUtils"
+	"shercrypto/xutils"
 	"testing"
 )
 
@@ -20,7 +20,7 @@ var (
 //1	        2	    3	        4
 
 func TestNewTree(t *testing.T) {
-	ageBytes, _ := sherUtils.GetHashValue(age, sha256.New)
+	ageBytes, _ := xutils.GetHashValue(age, sha256.New)
 	fmt.Println("ageBytes:", ageBytes)
 	tree, err := NewTree(values)
 	if err != nil {

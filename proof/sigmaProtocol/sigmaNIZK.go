@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bn256"
 	"math/big"
 	"shercrypto/ecc/bn256Utils"
-	"shercrypto/sherUtils"
+	"shercrypto/xutils"
 	sherMath "shercrypto/xmath"
 	"strings"
 )
@@ -171,8 +171,8 @@ func (this *sigmaNIZK) Prove(R *bn256.G1, pk *bn256.G1, optionData []byte) (prov
 	}
 	// c = H(g || t || A || optionData)
 	base := bn256Utils.G1ScalarBaseMult(new(big.Int).SetInt64(1))
-	cPre := sherUtils.ContactBytes(base.Marshal(), t.Marshal(), pk.Marshal(), optionData)
-	c, err := sherUtils.GetSha3HashBytes(cPre)
+	cPre := xutils.ContactBytes(base.Marshal(), t.Marshal(), pk.Marshal(), optionData)
+	c, err := xutils.GetSha3HashBytes(cPre)
 	if err != nil {
 		return nil, err
 	}

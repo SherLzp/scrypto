@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-	"shercrypto/sherUtils"
+	"shercrypto/xutils"
 )
 
 type MerkleTree struct {
@@ -47,7 +47,7 @@ func buildWithValues(values [][]byte, t *MerkleTree) (root *Node, leaves []*Node
 	}
 	for _, val := range values {
 		h := t.hashStrategy
-		hashVal, err := sherUtils.GetHashValue(val, h)
+		hashVal, err := xutils.GetHashValue(val, h)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -83,7 +83,7 @@ func buildIntermediate(nodes []*Node, t *MerkleTree) (root *Node, err error) {
 		}
 		chash := append(nodes[left].HashVal, nodes[right].HashVal...)
 		h := t.hashStrategy
-		hashVal, err := sherUtils.GetHashValue(chash, h)
+		hashVal, err := xutils.GetHashValue(chash, h)
 		if err != nil {
 			return nil, err
 		}
@@ -125,7 +125,7 @@ func NewTreeWithHashStrategy(values [][]byte, hashStrategy func() hash.Hash) (*M
 func (mt *MerkleTree) GetMerklePath(value []byte) (merklePath [][]byte, index []int64, err error) {
 	for _, node := range mt.Leaves {
 		h := mt.hashStrategy
-		hashVal, err := sherUtils.GetHashValue(value, h)
+		hashVal, err := xutils.GetHashValue(value, h)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -152,7 +152,7 @@ func (mt *MerkleTree) GetMerklePath(value []byte) (merklePath [][]byte, index []
 func (mt *MerkleTree) VerifyValue(value []byte) (bool, error) {
 	for _, node := range mt.Leaves {
 		h := mt.hashStrategy
-		hashVal, err := sherUtils.GetHashValue(value, h)
+		hashVal, err := xutils.GetHashValue(value, h)
 		if err != nil {
 			return false, err
 		}
@@ -163,7 +163,7 @@ func (mt *MerkleTree) VerifyValue(value []byte) (bool, error) {
 				leftBytes := nodeParent.Left.HashVal
 				rightBytes := nodeParent.Right.HashVal
 				cBytes := append(leftBytes, rightBytes...)
-				cHashVal, err := sherUtils.GetHashValue(cBytes, h)
+				cHashVal, err := xutils.GetHashValue(cBytes, h)
 				if err != nil {
 					return false, err
 				}
