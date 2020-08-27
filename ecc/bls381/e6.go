@@ -1,6 +1,6 @@
 package bls381
 
-import "shercrypto/ecc/bls381/fp"
+import "scrypto/ecc/bls381/fp"
 
 // e6 is a degree-three finite field extension of fp2:
 // B0 + B1v + B2v^2 where v^3-1,1 is irrep in fp2

@@ -1,4 +1,4 @@
-package xutils
+package sutils
 
 func ContactBytes(a, b []byte, in ...[]byte) (res []byte) {
 	contact := func(_a, _b []byte) (_res []byte) {

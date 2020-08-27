@@ -1,22 +1,58 @@
 package bls381Utils
 
 import (
+	"crypto/rand"
 	"math/big"
-	"shercrypto/ecc/bls381"
-	"shercrypto/ecc/bls381/fr"
+	"scrypto/ecc/bls381"
+	"scrypto/ecc/bls381/fr"
 )
 
-var BLSCurve = bls381.BLS381()
+var (
+	BLSCurve = bls381.BLS381()
+	BaseG1   = BLSCurve.G1Gen
+	BaseG2   = BLSCurve.G2Gen
+)
 
 type G1 = bls381.G1Jac
 type G2 = bls381.G2Jac
 type GT = bls381.PairingResult
+
+const (
+	bits = 256
+)
 
 func G1ScalarBaseMult(a *big.Int) *G1 {
 	var b fr.Element
 	b.SetBigInt(a)
 
 	return new(G1).ScalarMulByGen(BLSCurve, b)
+}
+
+func RandomG1() (k *big.Int, K *G1, err error) {
+	for {
+		k, err = rand.Prime(rand.Reader, bits)
+		if err != nil {
+			return nil, nil, err
+		}
+		if k.Sign() > 0 {
+			break
+		}
+	}
+	return k, G1ScalarBaseMult(k), nil
+}
+
+func RandomG2() (k *big.Int, K *G2, err error) {
+	for {
+		k, err = rand.Prime(rand.Reader, bits)
+		if err != nil {
+			return nil, nil, err
+		}
+		if k.Sign() > 0 {
+			break
+		}
+	}
+	K = G2ScalarBaseMult(k)
+	return k, K, nil
 }
 
 func G1ScalarMult(a *G1, b *big.Int) *G1 {

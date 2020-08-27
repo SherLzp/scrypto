@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bn256"
 	"math/big"
-	"shercrypto/ecc/bn256Utils"
+	"scrypto/ecc/bn256Utils"
 	"testing"
 )
 

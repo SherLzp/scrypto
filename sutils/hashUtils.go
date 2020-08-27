@@ -1,4 +1,4 @@
-package xutils
+package sutils
 
 import (
 	"crypto/elliptic"
@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"hash"
 	"math/big"
-	"shercrypto/ecc/p256Utils"
+	"scrypto/ecc/p256Utils"
 )
 
 /**

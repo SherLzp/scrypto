@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bn256"
 	"math/big"
-	"shercrypto/ecc/bn256Utils"
-	sherMath "shercrypto/xmath"
+	"scrypto/ecc/bn256Utils"
+	sherMath "scrypto/smath"
 	"strconv"
 	"strings"
 )
@@ -453,7 +453,7 @@ func TryOnce2() {
 	// check if e(S,Q) == e(K,A)
 	eSQ := bn256.Pair(S, Q)
 	eKA := bn256.Pair(K, A)
-	fmt.Println("-----------Verify signature test start-------------")
+	fmt.Println("-----------Verify dsa test start-------------")
 	fmt.Println("eSQ==eKA:", eSQ.String() == eKA.String())
 	// check if e(S_i,Q) == e(K,A_i)
 	// eS1Q eKA1
@@ -468,7 +468,7 @@ func TryOnce2() {
 	eTQ := bn256.Pair(T, Q)
 	eCZ := bn256.Pair(C, Z)
 	fmt.Println("eTQ==eCZ:", eTQ.String() == eCZ.String())
-	fmt.Println("-----------Verify signature test end-------------")
+	fmt.Println("-----------Verify dsa test end-------------")
 
 	// start privacy attribute
 	alpha, _ := rand.Int(rand.Reader, bn256.Order)
@@ -486,11 +486,11 @@ func TryOnce2() {
 	S1_ba := bn256Utils.G1ScalarMult(K_ba, a1)
 	S2_ba := bn256Utils.G1ScalarMult(K_ba, a2)
 	T_ba := bn256Utils.G1ScalarMult(C_ba, z)
-	// verify signatures
+	// verify dsa
 	// check if e(S_ba,Q) == e(K_ba,A)
 	eS_baQ := bn256.Pair(S_ba, Q)
 	eK_baA := bn256.Pair(K_ba, A)
-	fmt.Println("-----------Verify modified signature start-------------")
+	fmt.Println("-----------Verify modified dsa start-------------")
 	fmt.Println("eS_baQ == eK_baA:", eS_baQ.String() == eK_baA.String())
 	eS1_baQ := bn256.Pair(S1_ba, Q)
 	eK_baA1 := bn256.Pair(K_ba, A1)
@@ -501,6 +501,6 @@ func TryOnce2() {
 	eT_baQ := bn256.Pair(T_ba, Q)
 	eC_baZ := bn256.Pair(C_ba, Z)
 	fmt.Println("eS2_baQ == eK_baA2:", eT_baQ.String() == eC_baZ.String())
-	fmt.Println("-----------Verify modified signature end-------------")
+	fmt.Println("-----------Verify modified dsa end-------------")
 	fmt.Println("-----------Self-blindable Attribute-based Credential end-------------")
 }

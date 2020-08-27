@@ -1,7 +1,7 @@
 package bls381
 
 import (
-	"shercrypto/ecc/bls381/fp"
+	"scrypto/ecc/bls381/fp"
 )
 
 // e2 is a degree-two finite field extension of fp.Element:

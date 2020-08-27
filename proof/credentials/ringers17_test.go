@@ -3,7 +3,7 @@ package credentials
 import (
 	"fmt"
 	"math/big"
-	"shercrypto/signatures/ringers17"
+	"scrypto/dsa/ringers17"
 	"testing"
 	"time"
 )

@@ -3,7 +3,7 @@ package bls381
 import (
 	"math/bits"
 
-	"shercrypto/ecc/bls381/fp"
+	"scrypto/ecc/bls381/fp"
 )
 
 // e12 is a degree-two finite field extension of fp6:

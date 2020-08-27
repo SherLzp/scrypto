@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bn256"
 	"math/big"
-	"shercrypto/ecc/bn256Utils"
-	"shercrypto/proof/sigmaProtocol"
-	"shercrypto/xutils"
-	"shercrypto/signatures/ringers17"
-	sherMath "shercrypto/xmath"
+	"scrypto/ecc/bn256Utils"
+	"scrypto/proof/sigmaProtocol"
+	"scrypto/dsa/ringers17"
+	sherMath "scrypto/smath"
+	"scrypto/sutils"
 )
 
 type ringersCredential struct {
@@ -78,7 +78,7 @@ func hideAttributes(claim map[string]*big.Int, C map[string]bool) (hidedPairs ma
 	for key, attribute := range claim {
 		if _, ok := C[key]; ok {
 			// calculate commitment
-			commitmentBytes, err := xutils.ComputeCommitmentBytes(claim[key])
+			commitmentBytes, err := sutils.ComputeCommitmentBytes(claim[key])
 			if err != nil {
 				return nil, err
 			}
@@ -95,7 +95,7 @@ func hideAttributes(claim map[string]*big.Int, C map[string]bool) (hidedPairs ma
 func (ringers *ringersCredential) ShowCredential(credential *Credential, pk *bn256.G1, C map[string]bool) (selectiveCredential *Credential, err error) {
 	// create a new credential
 	selectiveCredential = new(Credential)
-	// get signature
+	// get dsa
 	oldSigma := credential.Sigma
 	// hide attributes
 	// subSet is the hided attributes set
@@ -135,7 +135,7 @@ func (ringers *ringersCredential) ShowCredential(credential *Credential, pk *bn2
 	kappa_beta := sherMath.Mul(newSigma.Kappa, beta, ringers.P)
 	nizk.AddPair(kappa_beta, newSigma.S)
 	// optionData H(k_i) i \in \mathcal{C}
-	//optionData, err := xutils.GetSha3HashBytes(optionDataPre)
+	//optionData, err := sutils.GetSha3HashBytes(optionDataPre)
 	//if err != nil {
 	//	return nil, err
 	//}
@@ -156,7 +156,7 @@ func (ringers *ringersCredential) Verify(credential *Credential, optionData []by
 		}
 		ks = append(ks, credential.Claim[key])
 	}
-	// verify credential signature
+	// verify credential dsa
 	ringersSigner := ringers17.NewSigOfRingers()
 	res, err = ringersSigner.Verify(ks, credential.Sigma, pk)
 	// verify selective credential
@@ -192,7 +192,7 @@ func TryOnce() {
 	for k, v := range credential.Claim {
 		fmt.Printf("Key is: %s, Value is: %s \n", k, v.Bytes())
 	}
-	// verify signature
+	// verify dsa
 	var attributes []*big.Int
 	for _, attribute := range credential.Claim {
 		attributes = append(attributes, attribute)

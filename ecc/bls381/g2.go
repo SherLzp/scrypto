@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"sync"
 
-	"shercrypto/ecc/bls381/fr"
-	"shercrypto/ecc/internal/debug"
-	"shercrypto/ecc/internal/pool"
+	"scrypto/ecc/bls381/fr"
+	"scrypto/ecc/internal/debug"
+	"scrypto/ecc/internal/pool"
 )
 
 // G2Jac is a point with e2 coordinates
@@ -372,12 +372,12 @@ func (p *G2Jac) ScalarMul(curve *Curve, a *G2Jac, scalar fr.Element) *G2Jac {
 	return p.pippenger(curve, []G2Jac{*a}, []fr.Element{scalar}, s, b, T[:], computeT)
 }
 
-// ScalarMulByGen multiplies curve.g2Gen by scalar
+// ScalarMulByGen multiplies curve.G2Gen by scalar
 // algorithm: a special case of Pippenger described by Bootle:
 // https://jbootle.github.io/Misc/pippenger.pdf
 func (p *G2Jac) ScalarMulByGen(curve *Curve, scalar fr.Element) *G2Jac {
 	computeT := func(T []G2Jac, t0 *G2Jac) {}
-	return p.pippenger(curve, []G2Jac{curve.g2Gen}, []fr.Element{scalar}, sGen, bGen, curve.tGenG2[:], computeT)
+	return p.pippenger(curve, []G2Jac{curve.G2Gen}, []fr.Element{scalar}, sGen, bGen, curve.tGenG2[:], computeT)
 }
 
 func (p *G2Jac) MultiExp(curve *Curve, points []G2Affine, scalars []fr.Element) chan G2Jac {

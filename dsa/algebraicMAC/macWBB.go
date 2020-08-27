@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"shercrypto/ecc/p256Utils"
-	sherMath "shercrypto/xmath"
+	"scrypto/ecc/p256Utils"
+	"scrypto/smath"
 )
 
 type macWBB struct {
@@ -56,11 +56,11 @@ func (this *macWBB) Mac(sk []*big.Int, mVec []*big.Int) (sigmas []*CurvePoint, e
 	N := this.curve.Params().N
 	sum := new(big.Int).SetInt64(0)
 	for i, m := range mVec {
-		mi_mul_xi := sherMath.Mul(m, sk[i+1], N)
-		sum = sherMath.Add(sum, mi_mul_xi, N)
+		mi_mul_xi := smath.Mul(m, sk[i+1], N)
+		sum = smath.Add(sum, mi_mul_xi, N)
 	}
-	x0_add_sum := sherMath.Add(sk[0], sum, N)
-	x0_add_sum_inverse := sherMath.ModInverse(x0_add_sum, N)
+	x0_add_sum := smath.Add(sk[0], sum, N)
+	x0_add_sum_inverse := smath.ModInverse(x0_add_sum, N)
 	// calculate sigma
 	sigma := p256Utils.ScalarBaseMult(x0_add_sum_inverse)
 	sigmas = append(sigmas, sigma)
@@ -83,10 +83,10 @@ func (this *macWBB) Verify(sk, mVec []*big.Int, sigma *CurvePoint) (res bool, er
 	N := this.curve.Params().N
 	sum := new(big.Int).SetInt64(0)
 	for i, m := range mVec {
-		mi_mul_xi := sherMath.Mul(m, sk[i+1], N)
-		sum = sherMath.Add(sum, mi_mul_xi, N)
+		mi_mul_xi := smath.Mul(m, sk[i+1], N)
+		sum = smath.Add(sum, mi_mul_xi, N)
 	}
-	x0_add_sum := sherMath.Add(sk[0], sum, N)
+	x0_add_sum := smath.Add(sk[0], sum, N)
 	vSigma := p256Utils.ScalarMult(sigma, x0_add_sum)
 	// check if g == vSigma
 	gBytes := p256Utils.Marshal(g)

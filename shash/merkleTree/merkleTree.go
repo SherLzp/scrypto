@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-	"shercrypto/xutils"
+	"scrypto/sutils"
 )
 
 type MerkleTree struct {
@@ -43,11 +43,11 @@ func NewTree(values [][]byte) (t *MerkleTree, err error) {
 
 func buildWithValues(values [][]byte, t *MerkleTree) (root *Node, leaves []*Node, err error) {
 	if len(values) == 0 {
-		return nil, nil, errors.New("error: cannot construct tree with no values")
+		return nil, nil, errors.New("error: cannot construct shash with no values")
 	}
 	for _, val := range values {
 		h := t.hashStrategy
-		hashVal, err := xutils.GetHashValue(val, h)
+		hashVal, err := sutils.GetHashValue(val, h)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -83,7 +83,7 @@ func buildIntermediate(nodes []*Node, t *MerkleTree) (root *Node, err error) {
 		}
 		chash := append(nodes[left].HashVal, nodes[right].HashVal...)
 		h := t.hashStrategy
-		hashVal, err := xutils.GetHashValue(chash, h)
+		hashVal, err := sutils.GetHashValue(chash, h)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +102,7 @@ func buildIntermediate(nodes []*Node, t *MerkleTree) (root *Node, err error) {
 	return buildIntermediate(newNodes, t)
 }
 
-//MerkleRoot returns the unverified Merkle Root (hash of the root node) of the tree.
+//MerkleRoot returns the unverified Merkle Root (hash of the root node) of the shash.
 func (mt *MerkleTree) MerkleRoot() []byte {
 	return mt.rootHash
 }
@@ -125,7 +125,7 @@ func NewTreeWithHashStrategy(values [][]byte, hashStrategy func() hash.Hash) (*M
 func (mt *MerkleTree) GetMerklePath(value []byte) (merklePath [][]byte, index []int64, err error) {
 	for _, node := range mt.Leaves {
 		h := mt.hashStrategy
-		hashVal, err := xutils.GetHashValue(value, h)
+		hashVal, err := sutils.GetHashValue(value, h)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -152,7 +152,7 @@ func (mt *MerkleTree) GetMerklePath(value []byte) (merklePath [][]byte, index []
 func (mt *MerkleTree) VerifyValue(value []byte) (bool, error) {
 	for _, node := range mt.Leaves {
 		h := mt.hashStrategy
-		hashVal, err := xutils.GetHashValue(value, h)
+		hashVal, err := sutils.GetHashValue(value, h)
 		if err != nil {
 			return false, err
 		}
@@ -163,7 +163,7 @@ func (mt *MerkleTree) VerifyValue(value []byte) (bool, error) {
 				leftBytes := nodeParent.Left.HashVal
 				rightBytes := nodeParent.Right.HashVal
 				cBytes := append(leftBytes, rightBytes...)
-				cHashVal, err := xutils.GetHashValue(cBytes, h)
+				cHashVal, err := sutils.GetHashValue(cBytes, h)
 				if err != nil {
 					return false, err
 				}
@@ -183,7 +183,7 @@ func (n *Node) String() string {
 	return fmt.Sprintf("%t %t %v", n.leaf, n.dup, n.HashVal)
 }
 
-//String returns a string representation of the tree. Only leaf nodes are included
+//String returns a string representation of the shash. Only leaf nodes are included
 //in the output.
 func (mt *MerkleTree) String() string {
 	s := ""

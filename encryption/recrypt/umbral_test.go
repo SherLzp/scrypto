@@ -4,7 +4,7 @@ import (
 	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
-	"shercrypto/signatures/ecdsa"
+	"scrypto/dsa/ecdsa"
 	"testing"
 )
 

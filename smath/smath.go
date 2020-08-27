@@ -1,4 +1,4 @@
-package xmath
+package smath
 
 import "math/big"
 

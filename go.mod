@@ -1,4 +1,4 @@
-module shercrypto
+module scrypto
 
 go 1.13
 

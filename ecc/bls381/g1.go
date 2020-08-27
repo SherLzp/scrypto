@@ -3,10 +3,10 @@ package bls381
 
 import (
 	"runtime"
-	"shercrypto/ecc/bls381/fp"
-	"shercrypto/ecc/bls381/fr"
-	"shercrypto/ecc/internal/debug"
-	"shercrypto/ecc/internal/pool"
+	"scrypto/ecc/bls381/fp"
+	"scrypto/ecc/bls381/fr"
+	"scrypto/ecc/internal/debug"
+	"scrypto/ecc/internal/pool"
 	"sync"
 )
 
@@ -371,12 +371,12 @@ func (p *G1Jac) ScalarMul(curve *Curve, a *G1Jac, scalar fr.Element) *G1Jac {
 	return p.pippenger(curve, []G1Jac{*a}, []fr.Element{scalar}, s, b, T[:], computeT)
 }
 
-// ScalarMulByGen multiplies curve.g1Gen by scalar
+// ScalarMulByGen multiplies curve.G1Gen by scalar
 // algorithm: a special case of Pippenger described by Bootle:
 // https://jbootle.github.io/Misc/pippenger.pdf
 func (p *G1Jac) ScalarMulByGen(curve *Curve, scalar fr.Element) *G1Jac {
 	computeT := func(T []G1Jac, t0 *G1Jac) {}
-	return p.pippenger(curve, []G1Jac{curve.g1Gen}, []fr.Element{scalar}, sGen, bGen, curve.tGenG1[:], computeT)
+	return p.pippenger(curve, []G1Jac{curve.G1Gen}, []fr.Element{scalar}, sGen, bGen, curve.tGenG1[:], computeT)
 }
 
 func (p *G1Jac) MultiExp(curve *Curve, points []G1Affine, scalars []fr.Element) chan G1Jac {
