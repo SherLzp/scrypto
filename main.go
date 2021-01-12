@@ -1,8 +1,6 @@
 package main
 
-import (
-	"shercrypto/proof/credentials"
-)
+import "scrypto/encryption/ouEnc"
 
 func main() {
 	//sherAes.TryOnce()
@@ -10,5 +8,6 @@ func main() {
 	//algebraicMAC.TryOnce()
 	//recrypt.TryOnce()
 	//ringers17.TryOnce()
-	credentials.TryOnce()
+	//credentials.TryOnce()
+	ouEnc.TryOnce()
 }
